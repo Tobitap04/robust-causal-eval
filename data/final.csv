@@ -1,0 +1,16 @@
+id,question_processed,answer_processed,dataset
+10651595,why is the guadeloupe woodpecker endangered,habitat loss,paq
+662753,what fruits cause bloating,"strawberries, melons, pineapple and other tropical fruits.",msmarco
+5a8cd881554299441c6b9f21,what caused the plane crash that killed annette snell?,hail damage and losing thrust on both engines,hotpotqa
+906067,what caused the widening of valles marineris,erosion,paq
+1718912088427161051,what were three causes of the french revolution?,cultural,naturalquestions
+78922,"like the moon's, the sun's gravity causes these on earth, but they're half as high due to greater distance",tides,searchqa
+585838,what causes blood blisters and thin skin,it is caused due to damage to blood vessels and tissues just under the skin.,msmarco
+qz_4754,the advertisement for which soft drink caused controversy in the 1990s for seemingly promoting a violent act?,tango,triviaqa
+./cnn/stories/f5f6db49aae94ae2644d2886fd6b2a6d2ab24c71.story,what caused the evacuation?,a large wildfire,newsqa
+707918,can having a yeast infection cause a false negative pregnancy test?,"false negative pregnancy tests are much more common than false positives. while a urinary tract infection (uti) is unlikely to cause a false negative it could do so, at least in theory. if you have a uti, see a doctor and then retake the test a few days later.",gooaq
+./cnn/stories/0cf74875b9fddf7e0c96fe743d9c4f0990be02ab.story,how did the suspect escape?,"by crawling through sewer pipes,",newsqa
+jp_3554,what insecticide caused a major reduction in bald eagle populations until 1972?,ddt,triviaqa
+./cnn/stories/83600703ee9ef8db3cc9550f0191960da7cb5da9.story,what is the cause of so many deaths?,africa attempt to make the perilous journey across the mediterranean in overcrowded boats.,newsqa
+1185802,why do cats scratch,"cats scratch to remove sloughed-off nail tips, allowing fresh nail growth to occur. and they can work out their knotted back muscles—cramped from sleeping 16 hours a day.",msmarco
+./cnn/stories/a98f1a0258f641788e570264b79e5c816f80054f.story,what photos caused italians to be outraged?,bodies of two drowned roma girls,newsqa
