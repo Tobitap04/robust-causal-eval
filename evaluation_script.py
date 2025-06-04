@@ -1,8 +1,8 @@
 from dotenv import load_dotenv
 from evaluation.evaluation import Evaluation
 from services.llm_service import LLMService
-from data.preprocessing import Preprocessing
 from services.command_line_service import get_cl_args
+from transformers import logging
 import os
 
 def main():
@@ -28,6 +28,7 @@ def main():
     preprocessing = Preprocessing(llm_service)
     preprocessing.run(40)
     '''
+    logging.set_verbosity_error()  # Suppress warnings from transformers library
 
     evaluation = Evaluation(llm_service=llm_service, **vars(args))
     evaluation.run()

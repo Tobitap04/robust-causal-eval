@@ -36,7 +36,7 @@ class LLMService:
             str: The generated response from the LLM.
         """
         try:
-            # TODO: Add support for system messages if needed
+            # TODO: Add support for system message if needed
             messages: list[ChatCompletionUserMessageParam] = [
                 {"role": "user", "content": prompt}
             ]
@@ -51,6 +51,7 @@ class LLMService:
                 params["temperature"] = str(temperature)
 
             response = self.client.chat.completions.create(**params)
+
 
             # Check if the response contains a <think> tag and handle it accordingly
             if "</think>" in response.choices[0].message.content:

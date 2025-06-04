@@ -1,8 +1,34 @@
+import argparse
 import os
 import random
 import pandas as pd
-from services.llm_service import LLMService
+from dotenv import load_dotenv
 from services.command_line_service import print_progress_bar
+from services.llm_service import LLMService
+
+
+def main():
+    # Get command line arguments
+    parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
+    parser.add_argument("nq", type=int, help="Number of causal questions to collect (target size).")
+    parser.add_argument("--llm", type=str, default="gwdg.llama-3.3-70b-instruct",
+                        help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')", )
+    args = parser.parse_args()
+
+    # Fetch API key and base url from environment variables
+    load_dotenv("config.env")
+    api_key = os.getenv("LLM_API_KEY")
+    if api_key is None:
+        raise RuntimeError("LLM_API_KEY is not set")
+    base_url = os.getenv("LLM_BASE_URL")
+    if base_url is None:
+        raise RuntimeError("LLM_BASE_URL is not set")
+
+    # Initialize the LLM service with API key and base URL
+    llm_service = LLMService(api_key=api_key, base_url=base_url, llm_name=args.llm)
+
+    preprocessing = Preprocessing(llm_service)
+    preprocessing.run(args.nq)
 
 
 class Preprocessing:
@@ -138,3 +164,6 @@ class Preprocessing:
                 + f"Now analyze only the following question in the same way:\nInput:{question}\nOutput:"
         )
         return prompt
+
+if __name__ == "__main__":
+    main()

@@ -30,12 +30,12 @@ def get_cl_args() -> argparse.Namespace:
 
     parser.add_argument("--perturbs", type=str, nargs='+',
                         choices=["none", "char", "word", "sentence", "language", "all"],
-                        default=["none", "char"],  # TODO: Add remaining perturbations
+                        default=["none", "char", "word", "all"],  # TODO: Add remaining perturbations
                         help="Perturbation levels to test (default: ['none', 'char', 'word', 'sentence', 'language', 'all'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
                         choices=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr", "kg_var", "kg_corr"],
-                        default=["rouge_var", "rouge_corr"], # TODO: Add remaining metrics
+                        default=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr"], # TODO: Add remaining metrics
                         help="Evaluation metrics to compute (default: ['All'])")
 
     parser.add_argument("--preproc", type=str, default="none",

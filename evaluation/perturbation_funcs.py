@@ -1,4 +1,6 @@
-import random
+import nlpaug.augmenter.char as nac
+import nlpaug.augmenter.word as naw
+
 def perturbation_func(question: str, level: str) -> str:
     """
     Perturbation function that applies a specified level of perturbation to the question.
@@ -23,26 +25,40 @@ def perturbation_func(question: str, level: str) -> str:
     else:
         raise ValueError("Invalid perturbation level specified.")
 
+
 def char_level(question: str) -> str:
     """
     Character-level perturbation function.
     Args:
-        question (dict): The question to perturb.
+        question (str): The question to perturb.
     Returns:
         str: The perturbed question with character-level changes.
     """
-    # Example implementation: replace characters randomly
-    return question + " (p1: " + str(random.random()) + ")"
+    # TODO: Refine the character-level perturbation (Punctuation, capitalization, etc.)
+    # nlplaug implementation
+    aug0 = naw.SpellingAug(aug_p=0.15)
+    perturbed_question = aug0.augment(question)[0]
+    aug1 = nac.KeyboardAug(aug_char_p=0.15, aug_word_p=0.15)
+    perturbed_question = aug1.augment(perturbed_question)[0]
+    aug2 = naw.SplitAug(aug_p=0.15)
+    perturbed_question = aug2.augment(perturbed_question)[0]
+    return perturbed_question
+
 
 def word_level(question: str) -> str:
     """
     Word-level perturbation function.
     Args:
-        question (dict): The question to perturb.
+        question (str): The question to perturb.
     Returns:
         str: The perturbed question with word-level changes.
     """
-    return question + " (p2: " + str(random.random()) + ")"
+    # TODO: Refine word-level perturbation (Better synonyms, antonyms, etc.)
+    # nlplaug implementation
+    aug = naw.SynonymAug(aug_src='wordnet', lang='eng')
+    perturbed_question = aug.augment(question)[0]
+    return perturbed_question
+
 
 def sentence_level(question: str) -> str:
     """
@@ -52,18 +68,19 @@ def sentence_level(question: str) -> str:
     Returns:
         str: The perturbed question with sentence-level changes.
     """
-    return question + " (p3: " + str(random.random()) + ")"
+    pass  # TODO: Implement sentence-level perturbation
 
 def language_level(question: str) -> str:
     """
     Language-level perturbation function.
     Args:
-        question (dict): The question to perturb.
+        question (str): The question to perturb.
     Returns:
         str: The perturbed question with language-level changes.
     """
     # Example implementation: translate to another language and back
-    return question + " (p4: " + str(random.random()) + ")"
+    pass  # TODO: Implement language-level perturbation
+
 
 def all_levels(question: str) -> str:
     """
@@ -73,8 +90,9 @@ def all_levels(question: str) -> str:
     Returns:
         str: The perturbed question with all levels of changes applied.
     """
-    perturbed = char_level(question)
-    perturbed = word_level(perturbed)
-    perturbed = sentence_level(perturbed)
-    perturbed = language_level(perturbed)
+    # perturbed = sentence_level(question)
+    perturbed = word_level(question)
+    # perturbed = language_level(perturbed)
+    perturbed = char_level(perturbed)
+
     return perturbed
