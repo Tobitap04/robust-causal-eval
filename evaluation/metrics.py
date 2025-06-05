@@ -46,7 +46,7 @@ def rouge(hypothesis: str, reference: str) -> float:
     Returns:
         float: ROUGE-L F1 score.
     """
-    scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True, split_summaries=False) # TODO: Play with different rouge variants
+    scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True, split_summaries=False)
     score = scorer.score(reference, hypothesis)
     return score['rougeL'].fmeasure
 
@@ -63,7 +63,7 @@ def bleu(hypothesis: str, reference: str) -> float:
     """
     reference_tokens = [reference.split()]
     hypothesis_tokens = hypothesis.split()
-    smoothing_fn = SmoothingFunction().method4 # TODO: Play with different smoothing functions
+    smoothing_fn = SmoothingFunction().method4
     return sentence_bleu(reference_tokens, hypothesis_tokens, smoothing_function=smoothing_fn)
 
 def bert(hypothesis: str, reference: str) -> float:

@@ -1,28 +1,36 @@
+import os
+
 import openai
 import requests
+from dotenv import load_dotenv
 from openai.types.chat import ChatCompletionUserMessageParam
 
 
 class LLMService:
     """Service for interacting with a Language Model (LLM) via OpenAI API."""
 
-    def __init__(self, api_key: str, base_url: str, llm_name: str) -> None:
+    def __init__(self, llm_name: str) -> None:
         """
         Initializes the LLMService with API key and base URL.
         Args:
-            api_key (str): The API key for the LLMs.
-            base_url (str): The base URL for the LLM access.
             llm_name (str): The name of the LLM to use.
         """
-        self.api_key = api_key
-        self.base_url = base_url
+        # Fetch API key and base url from environment variables
+        load_dotenv("config.env")
+        self.api_key = os.getenv("LLM_API_KEY")
+        if self.api_key is None:
+            raise RuntimeError("LLM_API_KEY is not set")
+        self.base_url = os.getenv("LLM_BASE_URL")
+        if self.base_url is None:
+            raise RuntimeError("LLM_BASE_URL is not set")
+
         # Check if the provided LLM name is available
         if llm_name not in self.get_available_models():
             raise ValueError(f"LLM model '{llm_name}' is not available. Available models: {self.get_available_models()}. Please check the model name.")
         self.llm_name = llm_name
         self.client = openai.OpenAI(
-            api_key=api_key,
-            base_url=base_url,
+            api_key=self.api_key,
+            base_url=self.base_url,
         )
 
     def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str | None:
@@ -36,7 +44,6 @@ class LLMService:
             str: The generated response from the LLM.
         """
         try:
-            # TODO: Add support for system message if needed
             messages: list[ChatCompletionUserMessageParam] = [
                 {"role": "user", "content": prompt}
             ]

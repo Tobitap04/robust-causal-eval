@@ -15,7 +15,7 @@ def print_progress_bar(current: int, total: int, bar_length: int = 40) -> None:
     sys.stdout.write(f'\rProgress: [{arrow}{spaces}] {current}/{total}')
     sys.stdout.flush()
 
-def get_cl_args() -> argparse.Namespace:
+def get_cl_args_eval() -> argparse.Namespace:
     """
     Parses command line arguments for evaluating LLM robustness on causal questions.
     Returns: argparse.Namespace: Parsed command line arguments.
@@ -42,7 +42,7 @@ def get_cl_args() -> argparse.Namespace:
                         choices=["none"],
                         help="Preprocessing of the question (default: 'none')")
 
-    parser.add_argument("--inproc", type=str, default="none",
+    parser.add_argument("--inproc", type= str, default="none",
                         choices=["none"],
                         help="Inprocessing of the question (default: 'none')")
 
@@ -52,5 +52,19 @@ def get_cl_args() -> argparse.Namespace:
 
     parser.add_argument("--temp", type=float, default=0,
                         help="Temperature setting for the LLM (default: 0)")
+
+    return parser.parse_args()
+
+def get_cl_args_preproc() -> argparse.Namespace:
+    """
+    Parses command line arguments for preprocessing question dataset.
+    Returns: argparse.Namespace: Parsed command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
+
+    parser.add_argument("nq", type=int, help="Number of causal questions to collect (target size).")
+
+    parser.add_argument("--llm", type=str, default="gwdg.llama-3.3-70b-instruct",
+                        help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')", )
 
     return parser.parse_args()
