@@ -1,7 +1,7 @@
+from transformers.utils import logging as tf_logging
 from evaluation.evaluation import Evaluation
 from services.llm_service import LLMService
 from services.command_line_service import get_cl_args_eval
-from transformers import logging
 
 def main():
     # Get command line arguments
@@ -11,9 +11,9 @@ def main():
     llm_service = LLMService(llm_name=args.llm)
 
     # Suppress warnings from transformers library
-    logging.set_verbosity_error()
+    tf_logging.set_verbosity_error()
 
     evaluation = Evaluation(llm_service=llm_service, **vars(args))
     evaluation.run()
 if __name__ == "__main__":
-    main()
+   main()

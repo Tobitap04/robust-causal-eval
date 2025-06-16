@@ -1,8 +1,10 @@
 from evaluation.metrics import compute_metric
 from evaluation.perturbation_funcs import perturbation_func
 from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
+from services.command_line_service import print_evaluation_results
 from services.llm_service import LLMService
 import pandas as pd
+import logging
 
 class Evaluation:
     DATASET_PATH = "data/final.csv"  # Path to the causal question dataset
@@ -46,29 +48,42 @@ class Evaluation:
         sampled_df = df.sample(n=self.num_questions)
         sampled_questions = sampled_df.to_dict(orient='records')
 
-
         results = {metric: {perturb: [] for perturb in self.perturbation_levels} for metric in self.metrics}
-        # TODO: Crash handling
-        for question in sampled_questions:
-            for perturbation in self.perturbation_levels:
-                prompt1 = perturbation_func(question['question_processed'], perturbation)
-                prompt2 = perturbation_func(question['question_processed'], perturbation)
-                prompt1_preprocessed = preprocessing_func(prompt1, self.preprocessing)
-                prompt2_preprocessed = preprocessing_func(prompt2, self.preprocessing)
-                res1 = inprocessing_func(prompt1_preprocessed, self.inprocessing, self.llm_service, self.temperature)
-                res2 = inprocessing_func(prompt2_preprocessed, self.inprocessing, self.llm_service, self.temperature)
-                if res1 is None or res2 is None:
-                    print(f"Error generating responses for question: {question['question_processed']}, Perturbation: {perturbation}")
-                    continue
-                res1_postprocessed = postprocessing_func(res1, self.postprocessing)
-                res2_postprocessed = postprocessing_func(res2, self.postprocessing)
-                for metric in self.metrics:
-                    score = compute_metric(res1_postprocessed, res2_postprocessed, question['answer_processed'], metric)
-                    results[metric][perturbation].append(score)
+        num_questions = len(sampled_questions)
 
-        # Am Ende: Durchschnitt berechnen und DataFrame erstellen
-        avg_results = {metric: {perturb: (sum(scores)/len(scores) if scores else None)
+
+        for idx, question in enumerate(sampled_questions, 1):
+           try:
+               question_text = question.get('question_processed')
+               answer_text = question.get('answer_processed')
+               if question_text is None or answer_text is None:
+                   logging.warning(f"Question or answer missing at index {idx}. Skipping.")
+                   continue
+               for perturbation in self.perturbation_levels:
+                   try:
+                       prompt1 = perturbation_func(question_text, perturbation)
+                       prompt2 = perturbation_func(question_text, perturbation)
+                       prompt1_preprocessed = preprocessing_func(prompt1, self.preprocessing)
+                       prompt2_preprocessed = preprocessing_func(prompt2, self.preprocessing)
+                       res1 = inprocessing_func(prompt1_preprocessed, self.inprocessing, self.llm_service, self.temperature)
+                       res2 = inprocessing_func(prompt2_preprocessed, self.inprocessing, self.llm_service, self.temperature)
+                       res1_postprocessed = postprocessing_func(res1, self.postprocessing)
+                       res2_postprocessed = postprocessing_func(res2, self.postprocessing)
+                       for metric in self.metrics:
+                           try:
+                               score = compute_metric(res1_postprocessed, res2_postprocessed, answer_text, metric)
+                               results[metric][perturbation].append(score)
+                               print(f"\rEvaluation in progress: Question {idx}/{num_questions}: {question_text[:60]}... | Perturbation: {perturbation} | Metric: {metric} | Score: {score:.4f}", end="", flush=True)
+                           except Exception as e:
+                               logging.error(f"Error while computing metric '{metric}': {e}")
+                   except Exception as e:
+                       logging.error(f"Error during perturbation '{perturbation}': {e}")
+           except Exception as e:
+               logging.error(f"Error with question {idx}: {e}")
+
+        avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}
-        df_results = pd.DataFrame(avg_results).T
-        print(df_results)
+
+        print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions, temperature=self.temperature, preprocessing=self.preprocessing, inprocessing=self.inprocessing, postprocessing=self.postprocessing, metrics=self.metrics, avg_results=avg_results, perturbation_levels=self.perturbation_levels)
+

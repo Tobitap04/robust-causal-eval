@@ -4,7 +4,10 @@ import openai
 import requests
 from dotenv import load_dotenv
 from openai.types.chat import ChatCompletionUserMessageParam
-
+import logging
+from ratelimit import limits, RateLimitException
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+import time
 
 class LLMService:
     """Service for interacting with a Language Model (LLM) via OpenAI API."""
@@ -33,21 +36,35 @@ class LLMService:
             base_url=self.base_url,
         )
 
-    def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str | None:
+    @staticmethod
+    def before_sleep_log_and_wait(retry_state):
+       """Logs the exception and waits before retrying.
+       Args:
+            retry_state (RetryCallState): The state of the retry call.
+       """
+       exc = retry_state.outcome.exception()
+       if isinstance(exc, RateLimitException):
+           time.sleep(getattr(exc, "period_remaining", 0))
+
+    @retry(
+       wait=wait_exponential(multiplier=1, min=2, max=30),
+       stop=stop_after_attempt(7),
+       retry=retry_if_exception_type((RateLimitException, requests.exceptions.RequestException, openai.RateLimitError)),
+       before_sleep=before_sleep_log_and_wait,
+    )
+    @limits(calls=10, period=60)
+    def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
         """
-        Generates a response from the LLM based on the provided prompt and parameters.
+        Fetches a response from the LLM based on the provided prompt.
         Args:
-            prompt (str): The input prompt for the LLM.
-            temperature (float): Controls the randomness of the output.
-            max_tokens (int): Maximum number of tokens to generate in the response.
-        Returns:
-            str: The generated response from the LLM.
+        prompt (str): The input prompt for the LLM.
+            temperature (float, optional): Sampling temperature for the response. Defaults to None.
+            max_tokens (int, optional): Maximum number of tokens in the response. Defaults to None.
         """
         try:
-            messages: list[ChatCompletionUserMessageParam] = [
+            messages: list[openai.types.chat.ChatCompletionUserMessageParam] = [
                 {"role": "user", "content": prompt}
             ]
-
             params = {
                 "model": self.llm_name,
                 "messages": messages,
@@ -59,15 +76,17 @@ class LLMService:
 
             response = self.client.chat.completions.create(**params)
 
+            logging.debug(f"LLM response: {response}")
+            content = response.choices[0].message.content
 
-            # Check if the response contains a <think> tag and handle it accordingly
-            if "</think>" in response.choices[0].message.content:
-                return response.choices[0].message.content.split("</think>", 1)[-1].strip()
+            # Remove the <think> tag of reasoning if present
+            if "</think>" in content:
+                return content.split("</think>", 1)[-1].strip()
             else:
-                return response.choices[0].message.content.strip()
+                return content.strip()
         except Exception as e:
-            print(f"Error: {e}")
-            return None
+            logging.error(f"Error fetching LLM response: {e}")
+            raise e
 
     def get_available_models(self) -> list | None:
         """
