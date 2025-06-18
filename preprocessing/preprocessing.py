@@ -10,17 +10,62 @@ class Preprocessing:
     Handles the preprocessing of question datasets by sampling, filtering, and categorizing questions.
     Stores the results in a final CSV file and tracks progress to avoid duplicates.
     """
-    DATA_DIR = "data/raw" # Directory containing raw question datasets
-    FINAL_PATH = "data/final.csv" # Path to the final output CSV file
-    PROGRESS_PATH = "data/progress.csv" # Path to track processed question IDs
 
-    def __init__(self, llm_service: LLMService) -> None:
+    def create_sample(self, target_size: int, output_path: str) -> None:
         """
-       Initializes the Preprocessing class with a given LLMService instance.
-       Args:
-           llm_service (LLMService): The language model service used for question categorization.
-       """
-        self.llm_service = llm_service
+        Creates a sample of questions from the raw datasets.
+        Args:
+            target_size (int): Target number of questions to collect.
+            output_path (str): Path to save the output file.
+        """
+        data_dir = "data/raw"  # Directory containing raw question datasets
+        if not os.path.exists(data_dir):
+            raise FileNotFoundError(f"Data directory not found at {data_dir}")
+
+        print("Loading datasets")
+        # Load already existing IDs from the output file, if available
+        if os.path.exists(output_path):
+            sample_df = pd.read_csv(output_path)
+            included_ids = set(sample_df["id"].astype(str))
+        else:
+            included_ids = set()
+            sample_df = pd.DataFrame(columns=["id", "question_processed", "answer_processed", "dataset"])
+
+        # Read all CSV files from the data directory and keep a DataFrame per file
+        csv_files = [f for f in os.listdir(self.DATA_DIR) if f.endswith(".csv")]
+        file_dfs = {}
+        for file in csv_files:
+            df = pd.read_csv(os.path.join(self.DATA_DIR, file))
+            df["dataset"] = os.path.splitext(file)[0]
+            file_dfs[file] = df[~df["id"].astype(str).isin(included_ids)]
+        print(f"Loaded {len(file_dfs)} datasets with {sum(len(df) for df in file_dfs.values())} questions.")
+
+        print_progress_bar(len(sample_df), target_size)
+        while len(sample_df) < target_size:
+            # Only consider files that are not empty
+            non_empty_files = [f for f, df in file_dfs.items() if not df.empty]
+            if not non_empty_files:
+                break
+            chosen_file = random.choice(non_empty_files)
+            df = file_dfs[chosen_file]
+            row = df.sample(1).iloc[0]
+            q_id = str(row["id"])
+
+            # Prepare new row for the final DataFrame
+            row_out = row[["id", "question_processed", "answer_processed", "dataset"]].copy()
+            new_row_df = pd.DataFrame([row_out])
+
+            # Add row and update ID set
+            sample_df = pd.concat([sample_df, new_row_df])
+            included_ids.add(q_id)
+            # Remove the selected question from the DataFrame of the file
+            file_dfs[chosen_file] = df[df["id"].astype(str) != q_id]
+            print_progress_bar(len(sample_df), target_size)
+
+        sample_df = sample_df.sample(frac=1)  # Shuffles the DataFrame
+        sample_df.to_csv(output_path, index=False)
+        print("\nSample creation finished. Output saved to:", output_path)
+
 
     def categorize_question(self, question: str) -> str:
         """
@@ -41,19 +86,22 @@ class Preprocessing:
         )
         return response
 
-    def run(self, target_size: int) -> None:
+    def filter_questions(self, target_size: int, llm: str, input_path: str, output_path: str) -> None:
         """
         Executes the preprocessing pipeline to collect a specified number of causal questions.
         Samples questions from raw datasets, checks them with the LLM, and saves valid entries.
         Args:
             target_size (int): The target number of causal questions to collect.
+            llm (str): The name of the LLM to use for categorization.
+            input_path (str): Path to the input dataset file (should end with .csv).
+            output_path (str): Path to save the output dataset file (should end with .csv).
         """
         # Load already processed IDs from progress file
-        if os.path.exists(self.PROGRESS_PATH):
+        if os.path.exists(input_path):
             progress_df = pd.read_csv(self.PROGRESS_PATH)
             processed_ids = set(progress_df["id"].astype(str))
         else:
-            raise FileNotFoundError(f"Progress file not found at {self.PROGRESS_PATH}")
+            raise FileNotFoundError(f"Input file not found at {self.PROGRESS_PATH}")
 
         # Load current length of final file
         if os.path.exists(self.FINAL_PATH):

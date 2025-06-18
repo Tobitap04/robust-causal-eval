@@ -11,4 +11,3 @@ django-ratelimit2~=0.4.2
 rouge_score~=0.1.2
 ratelimit~=2.2.1
 tenacity~=9.1.2
-rouge_score~=0.1.2

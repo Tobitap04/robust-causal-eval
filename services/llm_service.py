@@ -11,6 +11,7 @@ import time
 
 class LLMService:
     """Service for interacting with a Language Model (LLM) via OpenAI API."""
+    RPM = 10  # Requests per minute
 
     def __init__(self, llm_name: str) -> None:
         """
@@ -52,7 +53,7 @@ class LLMService:
        retry=retry_if_exception_type((RateLimitException, requests.exceptions.RequestException, openai.RateLimitError)),
        before_sleep=before_sleep_log_and_wait,
     )
-    @limits(calls=10, period=60)
+    @limits(calls=RPM, period=60)
     def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
         """
         Fetches a response from the LLM based on the provided prompt.

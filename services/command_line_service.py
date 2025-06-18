@@ -107,8 +107,10 @@ def get_cl_args_preproc() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
 
-    parser.add_argument("nq", type=int, help="Number of causal questions to collect (target size).")
-
+    parser.add_argument("function", type=str, help="Function to execute. (create_sample, filter_questions, sample_lookup)", choices=["create_sample", "filter_questions", "sample_lookup"])
+    parser.add_argument("--target_size", type=int, help="Target size of the causal question sample to collect.", default=10000)
+    parser.add_argument("--input_path", type=str, help="The path to the input dataset file (should end with .csv).", default=None)
+    parser.add_argument("--output_path", type=str, help="The path to the output dataset file (should end with .csv).", default=None)
     parser.add_argument("--llm", type=str, default="gwdg.llama-3.3-70b-instruct",
                         help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')", )
 
