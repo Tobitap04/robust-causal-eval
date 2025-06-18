@@ -24,17 +24,27 @@ To install all dependencies and create the required `config.env` file, run:
 ```bash
 python setup.py
 ```
-You will be prompted to enter your LLM_API_KEY and LLM_API_URL.
+You will be prompted to enter your LLM_API_KEY and LLM_BASE_URL.
 
 ## Data Preprocessing Instructions
-The repository already contains a carefully preprocessed dataset `data/final.csv`, but if you want to run the preprocessing yourself, follow these steps. 
+The repository already contains a carefully preprocessed and filtered sample of the [Webis-CausalQA-22](https://webis.de/data/webis-causalqa-22.html) dataset at `data/final.csv`. If you are interested in how this version was created, you can follow the steps below.  
+Otherwise, you can skip directly to the Evaluation section.
 
 ### Step 1: Download dataset
-Before running any preprocessing scripts, you need to download the [Webis-CausalQA-22](https://webis.de/data/webis-causalqa-22.html) dataset and put the csv files of the original or random split into the `data/raw` directory. If you want to recreate our results, you have to exclude the `eli5` dataset.
-
-### Step 2: Create sample
-As a first step, you have to create a sample from the original dataset. This can be done by running the following command (this may take a few minutes):
+First, download the [Webis-CausalQA-22](https://webis.de/data/webis-causalqa-22.html) dataset and copy all CSV files from `Webis-CausalQA-22-v-2.0/input/original-splits` into the `data/raw` directory.  
+Next, you need to run the following script, which downloads the Eli5 dataset, removes unnecessary columns for preprocessing, and merges the training and validation splits (this may take a few minutes):
 ```bash
-python preprocessing_script.py create_sample --output_path data/sample.csv --target_size 10000
+python preprocessing_script.py data_setup
 ```
-After this you can delete the `data/raw` directory, as it is no longer needed.
+### Step 2: Create sample
+Now, you need to create a sample from the dataset. We decided to exclude the following datasets: searchqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
+To generate the sample, run the following script (this may take a few minutes):
+```bash
+python python preprocessing_script.py create_sample --output_path data/sample0.csv --exclude searchqa newsqa hotpotqa --nq 10000
+```
+(After this you can delete the `data/raw` directory, as it is no longer needed.)
+
+## LLM Evaluation Instructions
+
+- Python version: 3.10
+- Wie viel SPeicher am ende bendötigt? (venv datei checken)

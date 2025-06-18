@@ -12,11 +12,11 @@ def build_prompt(question: str, option: str) -> str:
     if option == "overall":
         return overall_filter_v1(question)
     else:
-        raise ValueError("Invalid prompting type specified.")
+        raise ValueError(f"Invalid filter specified: {option}.")
 
 
 def overall_filter_v1(question: str) -> str:
-    # TODO: Rework and more examples
+    """Old version of the overall filter prompt. Now deprecated."""
     instruction = (
         "You are an expert at identifying whether a question is truly causal, has a clear reference, and is not nonsensical.\n"
         "A causal question seeks to identify the cause or reason behind an event or phenomenon.\n"

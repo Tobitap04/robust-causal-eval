@@ -7,11 +7,10 @@ import pandas as pd
 import logging
 
 class Evaluation:
-    DATASET_PATH = "data/final.csv"  # Path to the causal question dataset
 
     def __init__(self, llm_service: LLMService, llm: str, nq: int,
                  perturbs: list[str], metrics: list[str],
-                 preproc: str, inproc: str, postproc: str, temp: float) -> None:
+                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str) -> None:
         """
         Initializes the Evaluation class with the LLM service and evaluation parameters.
         Args:
@@ -24,6 +23,7 @@ class Evaluation:
             inproc (str): Inprocessing method for the questions.
             postproc (str): Postprocessing method for the questions.
             temp (float): Temperature to use.
+            sample_path (str): Path to sample of the  Webis-CausalQA dataset.
         """
         self.llm_service = llm_service
         self.llm_name = llm # Format checked in llm_service.py
@@ -38,11 +38,12 @@ class Evaluation:
         if not 0 <= temp <= 2:
             raise ValueError("Temperature must be between 0 and 2.")
         self.temperature = temp
+        self.sample_path = sample_path
 
     def run(self) -> None:
-
+        """Handles the evaluation process by sampling questions, applying perturbations, and computing metrics."""
         # Create question sample from the dataset
-        df = pd.read_csv(self.DATASET_PATH)
+        df = pd.read_csv(self.sample_path)
         if len(df) < self.num_questions:
             raise ValueError("Number of questions to evaluate is bigger than the dataset size.")
         sampled_df = df.sample(n=self.num_questions)
@@ -54,12 +55,13 @@ class Evaluation:
 
         for idx, question in enumerate(sampled_questions, 1):
            try:
-               question_text = question.get('question_processed')
-               answer_text = question.get('answer_processed')
+               question_text = question.get('question')
+               answer_text = question.get('answer')
                if question_text is None or answer_text is None:
                    logging.warning(f"Question or answer missing at index {idx}. Skipping.")
                    continue
                for perturbation in self.perturbation_levels:
+                   print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
                    try:
                        prompt1 = perturbation_func(question_text, perturbation)
                        prompt2 = perturbation_func(question_text, perturbation)
@@ -73,7 +75,7 @@ class Evaluation:
                            try:
                                score = compute_metric(res1_postprocessed, res2_postprocessed, answer_text, metric)
                                results[metric][perturbation].append(score)
-                               print(f"\rEvaluation in progress: Question {idx}/{num_questions}: {question_text[:60]}... | Perturbation: {perturbation} | Metric: {metric} | Score: {score:.4f}", end="", flush=True)
+                               print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
                                logging.error(f"Error while computing metric '{metric}': {e}")
                    except Exception as e:

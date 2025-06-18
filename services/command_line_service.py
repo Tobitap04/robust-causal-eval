@@ -60,7 +60,7 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 
     print("-" * (18 * len(headers)))
 
-def get_cl_args_eval() -> argparse.Namespace:
+def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbations, metrics and processing options
     """
     Parses command line arguments for evaluating LLM robustness on causal questions.
     Returns: argparse.Namespace: Parsed command line arguments.
@@ -75,13 +75,13 @@ def get_cl_args_eval() -> argparse.Namespace:
 
     parser.add_argument("--perturbs", type=str, nargs='+',
                         choices=["none", "char", "word", "sentence", "language", "all"],
-                        default=["none", "char", "word", "all"],  # TODO: Add remaining perturbations
+                        default=["none", "char", "word", "all"],
                         help="Perturbation levels to test (default: ['none', 'char', 'word', 'sentence', 'language', 'all'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
                         choices=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr", "kg_var", "kg_corr"],
-                        default=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr"], # TODO: Add remaining metrics
-                        help="Evaluation metrics to compute (default: ['All'])")
+                        default=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr"],
+                        help="Evaluation metrics to compute (default: ['rouge_var', 'rouge_corr', 'bleu_var', 'bleu_corr', 'bert_var', 'bert_corr', 'kg_var', 'kg_corr'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none"],
@@ -98,7 +98,10 @@ def get_cl_args_eval() -> argparse.Namespace:
     parser.add_argument("--temp", type=float, default=0,
                         help="Temperature setting for the LLM (default: 0)")
 
+    parser.add_argument("--sample_path", type=str, default="data/sample.csv", help="Path to sample of the  Webis-CausalQA dataset.") # TODO: Change to data/final.csv
+
     return parser.parse_args()
+
 
 def get_cl_args_preproc() -> argparse.Namespace:
     """
@@ -107,11 +110,15 @@ def get_cl_args_preproc() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
 
-    parser.add_argument("function", type=str, help="Function to execute. (create_sample, filter_questions, sample_lookup)", choices=["create_sample", "filter_questions", "sample_lookup"])
-    parser.add_argument("--target_size", type=int, help="Target size of the causal question sample to collect.", default=10000)
+    parser.add_argument("function", type=str, help="Function to execute.", choices=["data_setup", "create_sample", "filter_questions", "sample_lookup"])
+    parser.add_argument("--nq", type=int, help="The number of questions to sample.", default=10000)
     parser.add_argument("--input_path", type=str, help="The path to the input dataset file (should end with .csv).", default=None)
     parser.add_argument("--output_path", type=str, help="The path to the output dataset file (should end with .csv).", default=None)
+    parser.add_argument("--filter", type=str, help="The filter to apply to the questions.", choices=[], default=None) #TODO: Add filter options
+    parser.add_argument("--exclude", type=str, nargs='+', default=[],
+                        choices=["eli5", "gooaq", "hotpotqa", "msmarco", "naturalquestions", "newsqa", "paq", "searchqa", "squad2", "triviaqa"],
+                        help="Names of the datasets to exclude from the sample (default: [])")
     parser.add_argument("--llm", type=str, default="gwdg.llama-3.3-70b-instruct",
-                        help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')", )
+                        help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')")
 
     return parser.parse_args()

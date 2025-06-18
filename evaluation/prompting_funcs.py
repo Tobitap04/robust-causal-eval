@@ -13,7 +13,7 @@ def preprocessing_func(question: str, option: str) -> str:
     if option == "none":
         return question  # No preprocessing applied
     else:
-        raise ValueError("Invalid preprocessing type specified.")
+        raise ValueError(f"Invalid preprocessing type specified: {option}.")
 
 
 def inprocessing_func(prompt: str, option: str, llm_service: LLMService, temp: float) -> str:
@@ -31,7 +31,7 @@ def inprocessing_func(prompt: str, option: str, llm_service: LLMService, temp: f
     if option == "none":
         return llm_service.get_llm_response(prompt=prompt, temperature=temp)
     else:
-        raise ValueError("Invalid inprocessing type specified.")
+        raise ValueError(f"Invalid inprocessing type specified: {option}.")
 
 def postprocessing_func(response: str, option: str) -> str:
     """
@@ -45,4 +45,4 @@ def postprocessing_func(response: str, option: str) -> str:
     if option == "none":
         return response  # No postprocessing applied
     else:
-        raise ValueError("Invalid postprocessing type specified.")
+        raise ValueError(f"Invalid postprocessing type specified: {option}.")

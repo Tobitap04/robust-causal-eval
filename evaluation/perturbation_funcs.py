@@ -23,7 +23,7 @@ def perturbation_func(question: str, level: str) -> str:
     elif level == "all":
         return all_levels(question)
     else:
-        raise ValueError("Invalid perturbation level specified.")
+        raise ValueError(f"Invalid perturbation level specified: {level}.")
 
 
 def char_level(question: str) -> str:

@@ -1,29 +1,30 @@
 from preprocessing.preprocessing import Preprocessing
 from services.command_line_service import get_cl_args_preproc
 from services.llm_service import LLMService
+from preprocessing.data_setup import run_data_setup
 
 
 def main():
     # Get command line arguments
     args = get_cl_args_preproc()
 
-
-
-
-    if args.function == "create_sample":
-        if not args.target_size or not args.output_path:
-            raise ValueError("Both target_size and output_path must be specified for create_sample function.")
-        preprocessing = Preprocessing()
-        preprocessing.create_sample(target_size=args.target_size, output_path=args.output_path)
-    elif args['function'] == "filter_questions":
-        pass
-        # Initialize the LLM service with API key and base URL
+    if args.function == "filter_questions":
+        if not args.input_path or not args.llm or not args.output_path:
+            raise ValueError("input_path, llm, and output_path must be specified for filter_questions function.")
         # llm_service = LLMService(llm_name=args.llm)
+        # preprocessing = Preprocessing(llm_service=llm_service)
         # preprocessing.filter_questions()
-    elif args['function'] == "sample_lookup":
+    elif args.function == "create_sample":
+        if not args.nq or not args.output_path:
+            raise ValueError("Both nq and output_path must be specified for create_sample function.")
+        Preprocessing.create_sample(nq=args.nq, output_path=args.output_path, exclude=args.exclude)
+    elif args.function == "sample_lookup":
+        if not args.input_path:
+            raise ValueError("input_path must be specified for sample_lookup function.")
         pass
-        # preprocessing.sample_lookup()
-
+        # Preprocessing.sample_lookup(args.input_path)
+    elif args.function == "data_setup":
+        run_data_setup()
 
 
 if __name__ == "__main__":

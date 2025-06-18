@@ -1,13 +1,13 @@
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from openai.types.chat import ChatCompletionUserMessageParam
+from ratelimit import limits, RateLimitException
+from dotenv import load_dotenv
+import requests
+import logging
+import openai
+import time
 import os
 
-import openai
-import requests
-from dotenv import load_dotenv
-from openai.types.chat import ChatCompletionUserMessageParam
-import logging
-from ratelimit import limits, RateLimitException
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
-import time
 
 class LLMService:
     """Service for interacting with a Language Model (LLM) via OpenAI API."""

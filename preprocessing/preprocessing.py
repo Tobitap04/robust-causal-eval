@@ -11,16 +11,26 @@ class Preprocessing:
     Stores the results in a final CSV file and tracks progress to avoid duplicates.
     """
 
-    def create_sample(self, target_size: int, output_path: str) -> None:
+    def __init__(self, llm_service: LLMService):
+        """
+        Initializes the Preprocessing class with LLM service.
+        Args:
+            llm_service (LLMService): An instance of the LLMService to use for question categorization.
+        """
+        self.llm_service = llm_service
+
+    @staticmethod
+    def create_sample(nq: int, output_path: str, exclude: list[str]) -> None:
         """
         Creates a sample of questions from the raw datasets.
         Args:
-            target_size (int): Target number of questions to collect.
+            nq (int): Number of questions to sample.
             output_path (str): Path to save the output file.
+            exclude (list[str]): List of datasets to exclude from sampling.
         """
-        data_dir = "data/raw"  # Directory containing raw question datasets
-        if not os.path.exists(data_dir):
-            raise FileNotFoundError(f"Data directory not found at {data_dir}")
+        raw_dir = "data/raw"  # Directory containing raw question of the  Webis-CausalQA dataset
+        if not os.path.exists(raw_dir):
+            raise FileNotFoundError(f"Data directory not found at {raw_dir}")
 
         print("Loading datasets")
         # Load already existing IDs from the output file, if available
@@ -29,19 +39,19 @@ class Preprocessing:
             included_ids = set(sample_df["id"].astype(str))
         else:
             included_ids = set()
-            sample_df = pd.DataFrame(columns=["id", "question_processed", "answer_processed", "dataset"])
+            sample_df = pd.DataFrame(columns=["id", "question", "answer", "dataset"])
 
-        # Read all CSV files from the data directory and keep a DataFrame per file
-        csv_files = [f for f in os.listdir(self.DATA_DIR) if f.endswith(".csv")]
+        # Read all CSV files from the data directory which are not in the exclude list and keep a DataFrame per file
+        csv_files = [f for f in os.listdir(raw_dir) if f.endswith(".csv") and os.path.splitext(f)[0] not in exclude]
         file_dfs = {}
         for file in csv_files:
-            df = pd.read_csv(os.path.join(self.DATA_DIR, file))
+            df = pd.read_csv(os.path.join(raw_dir, file))
             df["dataset"] = os.path.splitext(file)[0]
             file_dfs[file] = df[~df["id"].astype(str).isin(included_ids)]
         print(f"Loaded {len(file_dfs)} datasets with {sum(len(df) for df in file_dfs.values())} questions.")
 
-        print_progress_bar(len(sample_df), target_size)
-        while len(sample_df) < target_size:
+        print_progress_bar(len(sample_df), nq)
+        while len(sample_df) < nq:
             # Only consider files that are not empty
             non_empty_files = [f for f, df in file_dfs.items() if not df.empty]
             if not non_empty_files:
@@ -52,7 +62,7 @@ class Preprocessing:
             q_id = str(row["id"])
 
             # Prepare new row for the final DataFrame
-            row_out = row[["id", "question_processed", "answer_processed", "dataset"]].copy()
+            row_out = row[["id", "question", "answer", "dataset"]].copy()
             new_row_df = pd.DataFrame([row_out])
 
             # Add row and update ID set
@@ -60,13 +70,13 @@ class Preprocessing:
             included_ids.add(q_id)
             # Remove the selected question from the DataFrame of the file
             file_dfs[chosen_file] = df[df["id"].astype(str) != q_id]
-            print_progress_bar(len(sample_df), target_size)
+            print_progress_bar(len(sample_df), nq)
 
         sample_df = sample_df.sample(frac=1)  # Shuffles the DataFrame
         sample_df.to_csv(output_path, index=False)
         print("\nSample creation finished. Output saved to:", output_path)
 
-
+    # TODO: Implement sample_lookup and filter_questions function
     def categorize_question(self, question: str) -> str:
         """
         Uses the LLM service to determine if a question is causal, clear, and sensible.
@@ -121,7 +131,7 @@ class Preprocessing:
                 continue
             row = df.sample(1).iloc[0]
             q_id = str(row["id"])
-            question_proc = str(row["question_processed"])
+            question_proc = str(row["question"])
 
             # Save the ID to the progress file
             processed_ids.add(q_id)
@@ -133,7 +143,7 @@ class Preprocessing:
             if result == "1":
                 # Add question and answer to final DataFrame
                 dataset_name = os.path.splitext(file)[0]
-                row_out = row[["id", "question_processed", "answer_processed"]].copy()
+                row_out = row[["id", "question", "answer"]].copy()
                 row_out["dataset"] = dataset_name
                 new_row_df = pd.DataFrame([row_out])
                 final_df = pd.concat([final_df, new_row_df], ignore_index=True)
