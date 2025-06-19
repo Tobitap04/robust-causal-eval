@@ -16,13 +16,13 @@ def run_data_setup():
     print("Data setup completed.")
 
 def delete_unnecessary_columns():
-    """Deletes all columns except "id", "question", and "answer" from all CSV files in the raw directory."""
+    """Deletes all columns except "id", "question_processed", and "answer_processed" from all CSV files in the raw directory."""
     print("Deleting unnecessary columns from CSV files in the raw directory...")
     for filename in os.listdir(raw_dir):
         if filename.endswith(".csv"):
             path = os.path.join(raw_dir, filename)
             df = pd.read_csv(path)
-            cols = [col for col in ["id", "question", "answer"] if col in df.columns]
+            cols = [col for col in ["id", "question_processed", "answer_processed"] if col in df.columns]
             df = df[cols]
             df.to_csv(path, index=False)
 
@@ -91,7 +91,7 @@ def create_eli5_dataset():
 
                 # Save only id, question, and answer
                 df = df[["q_id", "question", "answer"]].copy()
-                df.columns = ["id", "question", "answer"]
+                df.columns = ["id", "question_processed", "answer_processed"]
                 df.to_csv(ids_path, index=False)
 
         process_df(train_df, train_ids_path)

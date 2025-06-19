@@ -1,6 +1,7 @@
 from services.llm_service import LLMService
 import os
 import random
+import logging
 import pandas as pd
 from services.command_line_service import print_progress_bar
 from preprocessing.prompt_builder import build_prompt
@@ -39,7 +40,7 @@ class Preprocessing:
             included_ids = set(sample_df["id"].astype(str))
         else:
             included_ids = set()
-            sample_df = pd.DataFrame(columns=["id", "question", "answer", "dataset"])
+            sample_df = pd.DataFrame(columns=["id", "question_processed", "answer_processed", "dataset"])
 
         # Read all CSV files from the data directory which are not in the exclude list and keep a DataFrame per file
         csv_files = [f for f in os.listdir(raw_dir) if f.endswith(".csv") and os.path.splitext(f)[0] not in exclude]
@@ -62,7 +63,7 @@ class Preprocessing:
             q_id = str(row["id"])
 
             # Prepare new row for the final DataFrame
-            row_out = row[["id", "question", "answer", "dataset"]].copy()
+            row_out = row[["id", "question_processed", "answer_processed", "dataset"]].copy()
             new_row_df = pd.DataFrame([row_out])
 
             # Add row and update ID set
@@ -76,81 +77,112 @@ class Preprocessing:
         sample_df.to_csv(output_path, index=False)
         print("\nSample creation finished. Output saved to:", output_path)
 
-    # TODO: Implement sample_lookup and filter_questions function
-    def categorize_question(self, question: str) -> str:
+    @staticmethod
+    def sample_lookup(input_path: str, nq: int) -> None:
+       """
+       Reads the CSV file from `input_path`, samples `nq` questions, and prints question, answer, and dataset to the console.
+
+       Args:
+           input_path (str): Path to the input CSV file.
+           nq (int): Number of questions to sample and display.
+       """
+       if not os.path.exists(input_path):
+           raise FileNotFoundError(f"File not found: {input_path}")
+       df = pd.read_csv(input_path)
+       if df.empty:
+           print("The file contains no questions.")
+           return
+       sample_df = df.sample(n=min(nq, len(df)))
+       print(f"Sampled {len(sample_df)} questions from {input_path}:\n")
+       for _, row in sample_df.iterrows():
+           print(f"Question: {row['question_processed']}\nAnswer: {row['answer_processed']}\nDataset: {row['dataset']}\n{'-'*40}")
+
+    @staticmethod
+    def sample_stats(input_path: str) -> None:
         """
-        Uses the LLM service to determine if a question is causal, clear, and sensible.
+        Prints statistics for each dataset in the given CSV file, showing how many questions are present per dataset.
+
+        Args:
+            input_path (str): Path to the input CSV file.
+        """
+        if not os.path.exists(input_path):
+            raise FileNotFoundError(f"File not found: {input_path}")
+        df = pd.read_csv(input_path)
+        if df.empty:
+            print("The file contains no questions.")
+            return
+        dataset_counts = df["dataset"].value_counts()
+        print(f"Statistics of questions per dataset in file '{input_path}':")
+        for ds, count in dataset_counts.items():
+            print(f"{ds}: {count} questions")
+        print(f"Total questions: {len(df)}")
+
+
+    def filter_questions(self, input_path: str, output_path: str, filter_type: str) -> None:
+        """
+        Filters questions from the input file using categorize_question and saves the filtered questions to output_path.
+        Each question is checked exactly once. At the end, prints statistics about how many questions were removed per dataset.
+        The function is robust for long runtimes and can resume if interrupted.
+        Args:
+            input_path (str): Path to the input CSV file containing questions.
+            output_path (str): Path to save the filtered questions.
+            filter_type (str): The filter to apply to the questions, which is used in the LLM prompt.
+        """
+        if not os.path.exists(input_path):
+            raise FileNotFoundError(f"File not found: {input_path}")
+        df = pd.read_csv(input_path)
+        if df.empty:
+            print("The input file contains no questions.")
+            return
+
+        # Load progress if output file exists
+        if os.path.exists(output_path):
+            out_df = pd.read_csv(output_path)
+            already_checked = set(out_df["id"].astype(str))
+        else:
+            out_df = pd.DataFrame(columns=df.columns)
+            already_checked = set()
+
+        print(f"Starting filtering questions from {input_path} with filter '{filter_type}'")
+        stats = {}
+        total = len(df)
+        for idx, row in enumerate(df.itertuples(index=False), start=0):
+            print_progress_bar(idx+1, total)
+            q_id = str(getattr(row, "id"))
+            dataset = getattr(row, "dataset", None)
+            if q_id in already_checked:
+                continue
+            try:
+                result = self.categorize_question(str(getattr(row, "question_processed")), filter_type)
+            except Exception as e:
+                logging.error(f"Error with question {q_id}: {e}")
+                continue
+            if result == "1":
+                out_df = pd.concat([out_df, pd.DataFrame([row])], ignore_index=True)
+            else:
+                stats[dataset] = stats.get(dataset, 0) + 1
+            # Save progress for robustness
+            if idx % 20 == 0:
+                out_df.to_csv(output_path, index=False)
+        out_df.to_csv(output_path, index=False)
+        print("\nFiltering finished. Output saved to:", output_path)
+
+    def categorize_question(self, question: str, filter_type: str) -> str:
+        """
+        Evaluates a question using the LLM service to determine whether it matches the criteria defined by the given filter.
         Args:
             question (str): The question to be categorized.
+            filter_type (str): The filter to apply, which is used in the LLM prompt.
         Returns:
-            str: "1" if the question is causal, clear, and sensible, otherwise "0".
+            str: ‘1’ if the question is fine, ‘0’ if the issue applies.
         """
         # For R1 and qwq models, allow more tokens for reasoning
         if "R1" in self.llm_service.llm_name or "qwq" in self.llm_service.llm_name: max_tokens = 500
         else: max_tokens = 1  # For other models, limit to 1 token for efficiency
 
         response = self.llm_service.get_llm_response(
-            prompt=build_prompt(question, 'overall'),
+            prompt=build_prompt(question, filter_type),
             temperature=0,
             max_tokens=max_tokens
         )
         return response
-
-    def filter_questions(self, target_size: int, llm: str, input_path: str, output_path: str) -> None:
-        """
-        Executes the preprocessing pipeline to collect a specified number of causal questions.
-        Samples questions from raw datasets, checks them with the LLM, and saves valid entries.
-        Args:
-            target_size (int): The target number of causal questions to collect.
-            llm (str): The name of the LLM to use for categorization.
-            input_path (str): Path to the input dataset file (should end with .csv).
-            output_path (str): Path to save the output dataset file (should end with .csv).
-        """
-        # Load already processed IDs from progress file
-        if os.path.exists(input_path):
-            progress_df = pd.read_csv(self.PROGRESS_PATH)
-            processed_ids = set(progress_df["id"].astype(str))
-        else:
-            raise FileNotFoundError(f"Input file not found at {self.PROGRESS_PATH}")
-
-        # Load current length of final file
-        if os.path.exists(self.FINAL_PATH):
-            final_df = pd.read_csv(self.FINAL_PATH)
-            final_count = len(final_df)
-        else:
-            raise FileNotFoundError(f"Final file not found at {self.FINAL_PATH}")
-
-        csv_files = [f for f in os.listdir(self.DATA_DIR) if f.endswith(".csv")] # Load all CSV files from the data directory
-        print_progress_bar(final_count, target_size)
-        while final_count < target_size:
-            # Sample one random question from the CSV files
-            file = random.choice(csv_files)
-            df = pd.read_csv(os.path.join(self.DATA_DIR, file))
-            df = df[~df["id"].astype(str).isin(processed_ids)]  # Only keep questions that have not been processed yet
-            if df.empty:
-                continue
-            row = df.sample(1).iloc[0]
-            q_id = str(row["id"])
-            question_proc = str(row["question"])
-
-            # Save the ID to the progress file
-            processed_ids.add(q_id)
-            progress_df = pd.concat([progress_df, pd.DataFrame([{"id": q_id}])], ignore_index=True)
-            progress_df.to_csv(self.PROGRESS_PATH, index=False)
-
-            # Check if the question is causal and sensible
-            result = self.categorize_question(question_proc)
-            if result == "1":
-                # Add question and answer to final DataFrame
-                dataset_name = os.path.splitext(file)[0]
-                row_out = row[["id", "question", "answer"]].copy()
-                row_out["dataset"] = dataset_name
-                new_row_df = pd.DataFrame([row_out])
-                final_df = pd.concat([final_df, new_row_df], ignore_index=True)
-
-                # Save updated final_df to CSV
-                final_df.to_csv(self.FINAL_PATH, index=False)
-                final_count += 1
-                print_progress_bar(final_count, target_size)
-
-        print("\nFinished preprocessing")

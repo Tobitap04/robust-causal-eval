@@ -32,18 +32,41 @@ Otherwise, you can skip directly to the Evaluation section.
 
 ### Step 1: Download dataset
 First, download the [Webis-CausalQA-22](https://webis.de/data/webis-causalqa-22.html) dataset and copy all CSV files from `Webis-CausalQA-22-v-2.0/input/original-splits` into the `data/raw` directory.  
-Next, you need to run the following script, which downloads the Eli5 dataset, removes unnecessary columns for preprocessing, and merges the training and validation splits (this may take a few minutes):
+Next, run the following script. It will download the Eli5 dataset, remove columns that are not needed for this project, and merge the training and validation splits. This process may take a few minutes:
 ```bash
 python preprocessing_script.py data_setup
 ```
 ### Step 2: Create sample
-Now, you need to create a sample from the dataset. We decided to exclude the following datasets: searchqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
-To generate the sample, run the following script (this may take a few minutes):
+Now you need to create a sample from the dataset. We decided to start with a sample size of 10,000 and exclude the following datasets: searchqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
+To generate the sample called `sample.csv` stored in the `data` directory, run the following script (this may take a few minutes):
 ```bash
-python python preprocessing_script.py create_sample --output_path data/sample0.csv --exclude searchqa newsqa hotpotqa --nq 10000
+python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa newsqa hotpotqa --nq 10000
 ```
 (After this you can delete the `data/raw` directory, as it is no longer needed.)
 
+### Step 3: Filter sample
+To filter the sample, we removed all questions that did not meet the criteria defined in our paper. For this purpose, we developed a series of filtering functions tailored to create a high-quality dataset for our evaluation.  
+The filters were applied sequentially (in the order specified below), and the intermediate results were saved after each step. The final filtered sample is available at `data/final.csv`.  
+Filtering is performed using a large language model (LLM) with a rate limit set to 10 requests per minute (this can be changed in `services/llm_service.py`). As a result, filtering larger samples may take **several hours**.  
+Each filter uses a few-shot prompting strategy, defined in `preprocessing/prompt_builder.py`.  
+To run the filtering, use the following command with the appropriate filter name:
+```bash
+python preprocessing_script.py filter_questions --filter filter_1 --input_path data/sample.csv --output_path data/filtered_filter_1.csv
+```
+The available filters are:
+- `filter_1`: ...
+- `filter_2`: ...
+- `filter_3`: ...
+- `filter_4`: ...
+
+To refine our filtering prompts, we used this command to evaluate the dataset after each step and identify common issues. It displays `nq` random entries from the specified file:
+```bash
+python preprocessing_script.py sample_lookup --input_path data/sample.csv --nq 100
+```
+You can also use the following function to check the number of questions per dataset contained in the given path:
+```bash
+python preprocessing_script.py sample_stats --input_path data/sample.csv
+```
 ## LLM Evaluation Instructions
 
 - Python version: 3.10

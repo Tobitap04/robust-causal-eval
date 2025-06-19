@@ -55,8 +55,8 @@ class Evaluation:
 
         for idx, question in enumerate(sampled_questions, 1):
            try:
-               question_text = question.get('question')
-               answer_text = question.get('answer')
+               question_text = question.get('question_processed')
+               answer_text = question.get('answer_processed')
                if question_text is None or answer_text is None:
                    logging.warning(f"Question or answer missing at index {idx}. Skipping.")
                    continue

@@ -38,7 +38,7 @@ class LLMService:
         )
 
     @staticmethod
-    def before_sleep_log_and_wait(retry_state):
+    def before_sleep(retry_state):
        """Logs the exception and waits before retrying.
        Args:
             retry_state (RetryCallState): The state of the retry call.
@@ -47,11 +47,13 @@ class LLMService:
        if isinstance(exc, RateLimitException):
            time.sleep(getattr(exc, "period_remaining", 0))
 
+
+
     @retry(
        wait=wait_exponential(multiplier=1, min=2, max=30),
        stop=stop_after_attempt(7),
        retry=retry_if_exception_type((RateLimitException, requests.exceptions.RequestException, openai.RateLimitError)),
-       before_sleep=before_sleep_log_and_wait,
+       before_sleep=before_sleep,
     )
     @limits(calls=RPM, period=60)
     def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
@@ -77,7 +79,6 @@ class LLMService:
 
             response = self.client.chat.completions.create(**params)
 
-            logging.debug(f"LLM response: {response}")
             content = response.choices[0].message.content
 
             # Remove the <think> tag of reasoning if present
