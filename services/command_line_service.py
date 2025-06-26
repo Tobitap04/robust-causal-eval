@@ -114,7 +114,7 @@ def get_cl_args_preproc() -> argparse.Namespace:
     parser.add_argument("--nq", type=int, help="The number of questions to sample.", default=10000)
     parser.add_argument("--input_path", type=str, help="The path to the input dataset file (should end with .csv).", default=None)
     parser.add_argument("--output_path", type=str, help="The path to the output dataset file (should end with .csv).", default=None)
-    parser.add_argument("--filter", type=str, help="The filter to apply to the questions.", choices=["filter_1"], default=None) #TODO: Add filter options
+    parser.add_argument("--filter", type=str, help="The filter to apply to the questions.", choices=["causal_chain"], default=None) #TODO: Add filter options
     parser.add_argument("--exclude", type=str, nargs='+', default=[],
                         choices=["eli5", "gooaq", "hotpotqa", "msmarco", "naturalquestions", "newsqa", "paq", "searchqa", "squad2", "triviaqa"],
                         help="Names of the datasets to exclude from the sample (default: [])")

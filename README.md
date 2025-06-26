@@ -37,10 +37,10 @@ Next, run the following script. It will download the Eli5 dataset, remove column
 python preprocessing_script.py data_setup
 ```
 ### Step 2: Create sample
-Now you need to create a sample from the dataset. We decided to start with a sample size of 10,000 and exclude the following datasets: searchqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
+Now you need to create a sample from the dataset. We decided to start with a sample size of 10,000 and exclude the following datasets: searchqa, triviaqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
 To generate the sample called `sample.csv` stored in the `data` directory, run the following script (this may take a few minutes):
 ```bash
-python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa newsqa hotpotqa --nq 10000
+python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa triviaqa newsqa hotpotqa --nq 10000
 ```
 (After this you can delete the `data/raw` directory, as it is no longer needed.)
 
@@ -51,10 +51,10 @@ Filtering is performed using a large language model (LLM) with a rate limit set 
 Each filter uses a few-shot prompting strategy, defined in `preprocessing/prompt_builder.py`.  
 To run the filtering, use the following command with the appropriate filter name:
 ```bash
-python preprocessing_script.py filter_questions --filter filter_1 --input_path data/sample.csv --output_path data/filtered_filter_1.csv
+python preprocessing_script.py filter_questions --filter causal_chain --input_path data/sample.csv --output_path data/filtered_causal_chain.csv
 ```
 The available filters are:
-- `filter_1`: ...
+- `causal_chain`: This filter removes all question and answer pairs that do not exhibit a causal chain.
 - `filter_2`: ...
 - `filter_3`: ...
 - `filter_4`: ...

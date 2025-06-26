@@ -72,7 +72,7 @@ def bleu(hypothesis: str, reference: str) -> float:
     """
     reference_tokens = [reference.split()]
     hypothesis_tokens = hypothesis.split()
-    smoothing_fn = SmoothingFunction().method4 # Smoothing function to handle short sentences
+    smoothing_fn = SmoothingFunction().method2 # Smoothing function to handle short sentences
     return sentence_bleu(reference_tokens, hypothesis_tokens, smoothing_function=smoothing_fn)
 
 def bert(hypothesis: str, reference: str) -> float:
@@ -101,3 +101,4 @@ def kg_based_similarity(hypothesis: str, reference: str) -> float:
         float: Knowledge graph-based similarity score.
     """
     pass # TODO: Implement knowledge graph-based similarity computation
+

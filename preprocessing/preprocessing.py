@@ -1,5 +1,6 @@
 from services.llm_service import LLMService
 import os
+import re
 import random
 import logging
 import pandas as pd
@@ -95,7 +96,7 @@ class Preprocessing:
        sample_df = df.sample(n=min(nq, len(df)))
        print(f"Sampled {len(sample_df)} questions from {input_path}:\n")
        for _, row in sample_df.iterrows():
-           print(f"Question: {row['question_processed']}\nAnswer: {row['answer_processed']}\nDataset: {row['dataset']}\n{'-'*40}")
+           print(f"Question: {row['question_processed']}\nAnswer: {row['answer_processed']}\n{'-'*40}")
 
     @staticmethod
     def sample_stats(input_path: str) -> None:
@@ -153,7 +154,7 @@ class Preprocessing:
             if q_id in already_checked:
                 continue
             try:
-                result = self.categorize_question(str(getattr(row, "question_processed")), filter_type)
+                result = self.categorize_question(str(getattr(row, "question_processed")), str(getattr(row, "answer_processed")), filter_type)
             except Exception as e:
                 logging.error(f"Error with question {q_id}: {e}")
                 continue
@@ -167,22 +168,30 @@ class Preprocessing:
         out_df.to_csv(output_path, index=False)
         print("\nFiltering finished. Output saved to:", output_path)
 
-    def categorize_question(self, question: str, filter_type: str) -> str:
+    def categorize_question(self, question: str, answer: str, filter_type: str) -> str:
         """
         Evaluates a question using the LLM service to determine whether it matches the criteria defined by the given filter.
         Args:
             question (str): The question to be categorized.
+            answer (str, optional): The answer to the question. Defaults to None.
             filter_type (str): The filter to apply, which is used in the LLM prompt.
         Returns:
             str: ‘1’ if the question is fine, ‘0’ if the issue applies.
         """
-        # For R1 and qwq models, allow more tokens for reasoning
-        if "R1" in self.llm_service.llm_name or "qwq" in self.llm_service.llm_name: max_tokens = 500
-        else: max_tokens = 1  # For other models, limit to 1 token for efficiency
 
+        #print("Question:", question)
+        #print("Answer:", answer)
         response = self.llm_service.get_llm_response(
-            prompt=build_prompt(question, filter_type),
-            temperature=0,
-            max_tokens=max_tokens
+            prompt=build_prompt(question, answer, filter_type),
         )
+        #print("Response:", response)
+        # Only output the result if it is a causal chain filter
+        if filter_type == "causal_chain":
+            match = re.search(r"<result>(\d+)</result>", response)
+            if match:
+                return match.group(1)
+            else:
+                logging.error(f"Unexpected response format for filter '{filter_type}': {response}")
+                return "1"
+
         return response
