@@ -25,14 +25,14 @@ class LLMService:
         load_dotenv("config.env")
         self.api_key = os.getenv("LLM_API_KEY")
         if self.api_key is None:
-            raise ValueError("LLMService: LLM_API_KEY is not set")
+            raise ValueError("LLM_API_KEY is not set")
         self.base_url = os.getenv("LLM_BASE_URL")
         if self.base_url is None:
-            raise ValueError("LLMService: LLM_BASE_URL is not set")
+            raise ValueError("LLM_BASE_URL is not set")
 
         # Check if the provided LLM name is available
         if llm_name not in self.get_available_models():
-            raise ValueError(f"LLMService: LLM model '{llm_name}' is not available. Available models: {self.get_available_models()}. Please check the model name.")
+            raise ValueError(f"LLM model '{llm_name}' is not available. Available models: {self.get_available_models()}. Please check the model name.")
         self.llm_name = llm_name
         self.client = openai.OpenAI(
             api_key=self.api_key,
@@ -111,4 +111,4 @@ class LLMService:
             models_data = response.json().get("data", [])
             return [model["id"] for model in models_data]
         else:
-            raise RuntimeError(f"LLMService: Error fetching available models: {response.status_code} {response.text}")
+            raise RuntimeError(f"Error fetching available models: {response.status_code} {response.text}")
