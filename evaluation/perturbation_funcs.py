@@ -9,6 +9,8 @@ def perturbation_func(question: str, level: str) -> str:
         level (str): The level of perturbation to apply ('none', 'char', 'word', 'sentence', 'language', 'all').
     Returns:
         str: The perturbed question.
+    Raises:
+        ValueError: If an invalid perturbation technique is specified.
     """
     if level == "none":
         return question  # No perturbation applied

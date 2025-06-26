@@ -29,6 +29,8 @@ class Preprocessing:
             nq (int): Number of questions to sample.
             output_path (str): Path to save the output file.
             exclude (list[str]): List of datasets to exclude from sampling.
+        Raises:
+            FileNotFoundError: If the raw data directory does not exist.
         """
         raw_dir = "data/raw"  # Directory containing raw question of the  Webis-CausalQA dataset
         if not os.path.exists(raw_dir):
@@ -82,10 +84,11 @@ class Preprocessing:
     def sample_lookup(input_path: str, nq: int) -> None:
        """
        Reads the CSV file from `input_path`, samples `nq` questions, and prints question, answer, and dataset to the console.
-
        Args:
            input_path (str): Path to the input CSV file.
            nq (int): Number of questions to sample and display.
+       Raises:
+           FileNotFoundError: If the input file does not exist.
        """
        if not os.path.exists(input_path):
            raise FileNotFoundError(f"File not found: {input_path}")
@@ -102,9 +105,10 @@ class Preprocessing:
     def sample_stats(input_path: str) -> None:
         """
         Prints statistics for each dataset in the given CSV file, showing how many questions are present per dataset.
-
         Args:
             input_path (str): Path to the input CSV file.
+        Raises:
+            FileNotFoundError: If the input file does not exist.
         """
         if not os.path.exists(input_path):
             raise FileNotFoundError(f"File not found: {input_path}")
@@ -128,6 +132,8 @@ class Preprocessing:
             input_path (str): Path to the input CSV file containing questions.
             output_path (str): Path to save the filtered questions.
             filter_type (str): The filter to apply to the questions, which is used in the LLM prompt.
+        Raises:
+            FileNotFoundError: If the input file does not exist.
         """
         if not os.path.exists(input_path):
             raise FileNotFoundError(f"File not found: {input_path}")
@@ -156,7 +162,7 @@ class Preprocessing:
             try:
                 result = self.categorize_question(str(getattr(row, "question_processed")), str(getattr(row, "answer_processed")), filter_type)
             except Exception as e:
-                logging.error(f"Error with question {q_id}: {e}")
+                logging.error(f"Preprocessing: Error with question {q_id}: {e}")
                 continue
             if result == "1":
                 out_df = pd.concat([out_df, pd.DataFrame([row])], ignore_index=True)
@@ -177,6 +183,8 @@ class Preprocessing:
             filter_type (str): The filter to apply, which is used in the LLM prompt.
         Returns:
             str: ‘1’ if the question is fine, ‘0’ if the issue applies.
+        Raises:
+            ValueError: If the output from the LLM does not match the expected format.
         """
 
         #print("Question:", question)
@@ -191,7 +199,6 @@ class Preprocessing:
             if match:
                 return match.group(1)
             else:
-                logging.error(f"Unexpected response format for filter '{filter_type}': {response}")
-                return "1"
+               raise ValueError(f"Unexpected response format for filter '{filter_type}': {response}")
 
         return response

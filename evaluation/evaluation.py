@@ -38,10 +38,14 @@ class Evaluation:
         if not 0 <= temp <= 2:
             raise ValueError("Temperature must be between 0 and 2.")
         self.temperature = temp
-        self.sample_path = sample_path
+        self.sample_path = sample_path # Checked in run()
 
     def run(self) -> None:
-        """Handles the evaluation process by sampling questions, applying perturbations, and computing metrics."""
+        """
+        Handles the evaluation process by sampling questions, applying perturbations, and computing metrics.
+        Raises:
+            ValueError: If an invalid perturbation technique is specified.
+        """
         # Create question sample from the dataset
         df = pd.read_csv(self.sample_path)
         if len(df) < self.num_questions:
@@ -58,7 +62,7 @@ class Evaluation:
                question_text = question.get('question_processed')
                answer_text = question.get('answer_processed')
                if question_text is None or answer_text is None:
-                   logging.warning(f"Question or answer missing at index {idx}. Skipping.")
+                   logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.")
                    continue
                for perturbation in self.perturbation_levels:
                    print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
@@ -77,11 +81,11 @@ class Evaluation:
                                results[metric][perturbation].append(score)
                                print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
-                               logging.error(f"Error while computing metric '{metric}': {e}")
+                               logging.error(f"Evaluation: Error while computing metric '{metric}': {e}")
                    except Exception as e:
-                       logging.error(f"Error during perturbation '{perturbation}': {e}")
+                       logging.error(f"Evaluation: Error during perturbation '{perturbation}': {e}")
            except Exception as e:
-               logging.error(f"Error with question {idx}: {e}")
+               logging.error(f"Evaluation: Error with question {idx}: {e}")
 
         avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}

@@ -9,6 +9,8 @@ def preprocessing_func(question: str, option: str) -> str:
         option (str): The preprocessing method to apply ('none', ).
     Returns:
         str: The preprocessed question ready for prompting.
+    Raises:
+        ValueError: If an invalid preprocessing type is specified.
     """
     if option == "none":
         return question  # No preprocessing applied
@@ -26,7 +28,9 @@ def inprocessing_func(prompt: str, option: str, llm_service: LLMService, temp: f
         llm_service (LLMService): An instance of the LLM service used to generate the response.
         temp (float): Temperature setting controlling the randomness of the LLM output.
     Returns:
-    str: The generated response from the LLM after applying the specified prompting technique.
+        str: The generated response from the LLM after applying the specified prompting technique.
+    Raises:
+        ValueError: If an invalid inprocessing technique is specified.
     """
     if option == "none":
         return llm_service.get_llm_response(prompt=prompt, temperature=temp)
@@ -41,6 +45,8 @@ def postprocessing_func(response: str, option: str) -> str:
         option (str): The postprocessing method to apply ('none', ).
     Returns:
         str: The postprocessed and refined response.
+    Raises:
+        ValueError: If an invalid postprocessing technique is specified.
     """
     if option == "none":
         return response  # No postprocessing applied

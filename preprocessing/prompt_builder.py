@@ -9,6 +9,8 @@ def build_prompt(question: str, answer: str, option: str) -> str:
         option (str): The prompting function to apply ('overall', ).
     Returns:
         str: The constructed prompt for the LLM.
+    Raises:
+        ValueError: If prompting option is not valid.
     """
     if option == "overall":
         return overall_filter_v1(question)

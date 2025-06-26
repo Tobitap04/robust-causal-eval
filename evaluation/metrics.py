@@ -16,6 +16,8 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
 
     Returns:
         float: Computed metric score.
+    Raises:
+        ValueError: If an invalid metric type is specified.
     """
     if metric == "rouge_var":
         return rouge(prediction1, prediction2)
