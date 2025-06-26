@@ -11,7 +11,9 @@ Optionally create a python venv or conda environment. Requires `Python >= 3.10`.
 
 With `Anaconda3`:
 ```
-conda create --name robust-causal-eval python=3.10
+conda create --name robust-causal-eval python=3.10 
+conda init bash
+source ~/.bashrc
 conda activate robust-causal-eval
 ```
 
@@ -20,6 +22,14 @@ With `python`:
 python -m venv robust-causal-eval
 source robust-causal-eval/bin/activate
 ```
+
+We recommend using a `tmux` session for this project, as filtering the dataset and evaluating the models can take a significant amount of time.
+You can start a new session with the first command. To detach from the session, press `Ctrl + b`, then `d`. You can later reattach to the session with the second command without losing your progress:
+```
+tmux new -s robust-causal-eval
+tmux attach -t robust-causal-eval
+```
+
 To install all dependencies and create the required `config.env` file, run:
 ```bash
 python setup.py

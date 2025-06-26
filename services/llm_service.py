@@ -52,7 +52,6 @@ class LLMService:
     @retry(
        wait=wait_exponential(multiplier=1, min=2, max=30),
        stop=stop_after_attempt(7),
-       retry=retry_if_exception_type((RateLimitException, requests.exceptions.RequestException, openai.RateLimitError)),
        before_sleep=before_sleep,
     )
     @limits(calls=RPM, period=60)
@@ -60,7 +59,7 @@ class LLMService:
         """
         Fetches a response from the LLM based on the provided prompt.
         Args:
-        prompt (str): The input prompt for the LLM.
+            prompt (str): The input prompt for the LLM.
             temperature (float, optional): Sampling temperature for the response. Defaults to None.
             max_tokens (int, optional): Maximum number of tokens in the response. Defaults to None.
         """
