@@ -82,3 +82,4 @@ python preprocessing_script.py sample_stats --input_path data/sample.csv
 - Python version: 3.10
 - Wie viel SPeicher am ende bendötigt? (venv datei checken)
 - Help function für beides scripts erwähnen
+- Temux neus chreiben weil eh falsche reinfogel oder weg lassen oer nur als empfehlung

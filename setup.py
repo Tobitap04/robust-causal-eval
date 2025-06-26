@@ -1,8 +1,11 @@
 import subprocess
 import os
+import nltk
+
 
 def install_requirements():
     subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
+    nltk.download('averaged_perceptron_tagger_eng')
 
 def create_config_env():
     api_key = input("Please enter your LLM_API_KEY: ")
