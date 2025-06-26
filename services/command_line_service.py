@@ -84,11 +84,11 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbation
                         help="Evaluation metrics to compute (default: ['rouge_var', 'rouge_corr', 'bleu_var', 'bleu_corr', 'bert_var', 'bert_corr', 'kg_var', 'kg_corr'])")
 
     parser.add_argument("--preproc", type=str, default="none",
-                        choices=["none"],
+                        choices=["none", "word_constraint"],
                         help="Preprocessing of the question (default: 'none')")
 
     parser.add_argument("--inproc", type= str, default="none",
-                        choices=["none"],
+                        choices=["none", "few_shot"],
                         help="Inprocessing of the question (default: 'none')")
 
     parser.add_argument("--postproc", type=str, default="none",

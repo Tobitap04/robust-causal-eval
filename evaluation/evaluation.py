@@ -1,7 +1,8 @@
+import re
 from evaluation.metrics import compute_metric
 from evaluation.perturbation_funcs import perturbation_func
 from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
-from services.command_line_service import print_evaluation_results
+from services.command_line_service import print_evaluation_results, print_progress_bar
 from services.llm_service import LLMService
 import pandas as pd
 import logging
@@ -57,7 +58,8 @@ class Evaluation:
         num_questions = len(sampled_questions)
 
 
-        for idx, question in enumerate(sampled_questions, 1):
+        for idx, question in enumerate(sampled_questions, 0):
+           print_progress_bar(idx, num_questions)
            try:
                question_text = question.get('question_processed')
                answer_text = question.get('answer_processed')
@@ -65,12 +67,13 @@ class Evaluation:
                    logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.")
                    continue
                for perturbation in self.perturbation_levels:
-                   print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
+                   #print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
                    try:
+                       answer_words_count = len(re.findall(r'\b\w+\b', answer_text))
                        prompt1 = perturbation_func(question_text, perturbation)
                        prompt2 = perturbation_func(question_text, perturbation)
-                       prompt1_preprocessed = preprocessing_func(prompt1, self.preprocessing)
-                       prompt2_preprocessed = preprocessing_func(prompt2, self.preprocessing)
+                       prompt1_preprocessed = preprocessing_func(prompt1, self.preprocessing, answer_words_count)
+                       prompt2_preprocessed = preprocessing_func(prompt2, self.preprocessing, answer_words_count)
                        res1 = inprocessing_func(prompt1_preprocessed, self.inprocessing, self.llm_service, self.temperature)
                        res2 = inprocessing_func(prompt2_preprocessed, self.inprocessing, self.llm_service, self.temperature)
                        res1_postprocessed = postprocessing_func(res1, self.postprocessing)
@@ -79,14 +82,14 @@ class Evaluation:
                            try:
                                score = compute_metric(res1_postprocessed, res2_postprocessed, answer_text, metric)
                                results[metric][perturbation].append(score)
-                               print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
+                               #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
                                logging.error(f"Evaluation: Error while computing metric '{metric}': {e}")
                    except Exception as e:
                        logging.error(f"Evaluation: Error during perturbation '{perturbation}': {e}")
            except Exception as e:
                logging.error(f"Evaluation: Error with question {idx}: {e}")
-
+        print_progress_bar(num_questions, num_questions)
         avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}

@@ -1,12 +1,13 @@
 from services.llm_service import LLMService
 
 
-def preprocessing_func(question: str, option: str) -> str:
+def preprocessing_func(question: str, option: str, answer_word_count: int = None) -> str:
     """
     Preprocesses the input question before sending it to the LLM.
     Args:
         question (str): The original input question to preprocess.
         option (str): The preprocessing method to apply ('none', ).
+        answer_word_count (int, optional): The number of words in the ground truth answer.
     Returns:
         str: The preprocessed question ready for prompting.
     Raises:
@@ -14,9 +15,13 @@ def preprocessing_func(question: str, option: str) -> str:
     """
     if option == "none":
         return question  # No preprocessing applied
+    if option == "word_constraint":
+        if answer_word_count is None:
+            raise ValueError("Length of ground truth answer must be provided for 'add_length' preprocessing.")
+        return f"You must answer the following question using exactly {answer_word_count} words.\n\nQuestion: {question}"
+
     else:
         raise ValueError(f"Invalid preprocessing type specified: {option}.")
-
 
 def inprocessing_func(prompt: str, option: str, llm_service: LLMService, temp: float) -> str:
     """
@@ -34,8 +39,38 @@ def inprocessing_func(prompt: str, option: str, llm_service: LLMService, temp: f
     """
     if option == "none":
         return llm_service.get_llm_response(prompt=prompt, temperature=temp)
+    if option == "few_shot":
+        return few_shot_inprocessing(prompt, llm_service, temp)
     else:
         raise ValueError(f"Invalid inprocessing type specified: {option}.")
+
+def few_shot_inprocessing(prompt: str, llm_service: LLMService, temp: float) -> str:
+    """
+    Applies few-shot prompting by appending examples to the input prompt.
+    Args:
+        prompt (str): The input prompt to be sent to the LLM.
+        llm_service (LLMService): An instance of the LLM service used to generate the response.
+        temp (float): Temperature setting controlling the randomness of the LLM output.
+    Returns:
+        str: The generated response from the LLM after applying few-shot prompting.
+    """
+    instruction = "Here are some examples of questions and their answers:"
+    end = "Now answer the given question based on the examples and constraints provided."
+    examples = [
+        "Question: How come that many people get creative thoughts when they try to sleep?\n"
+        "Answer: When you're falling asleep, your brain receives fewer external sensory inputs (like sounds or sights), so it's free to wander and make new connections—similar to when you're in the shower.",
+
+        "Question: Can waist trainers cause back pain?\n"
+        "Answer: Yes, wearing waist trainers can weaken your back and core muscles over time, since the corset supports your posture instead of your muscles doing the job.",
+
+        "Question: What is caused by eating red meat?\n"
+        "Answer: Regularly eating large amounts of red or processed meat has been linked to an increased risk of certain cancers, like colorectal cancer.",
+
+        "Question: Why are some cats born with extra toes?\n"
+        "Answer: It's caused by a harmless genetic condition called polydactyly, which results in more than the usual number of toes on a cat’s paws."
+    ]
+    few_shot_prompt = f"{prompt}\n\n{instruction}\n\n" + "\n\n".join(examples) + f"\n\n{end}"
+    return llm_service.get_llm_response(prompt=few_shot_prompt, temperature=temp)
 
 def postprocessing_func(response: str, option: str) -> str:
     """
@@ -52,3 +87,4 @@ def postprocessing_func(response: str, option: str) -> str:
         return response  # No postprocessing applied
     else:
         raise ValueError(f"Invalid postprocessing type specified: {option}.")
+
