@@ -79,9 +79,9 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbation
                         help="Perturbation levels to test (default: ['none', 'char', 'word', 'sentence', 'language', 'all'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
-                        choices=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr", "kg_var", "kg_corr"],
-                        default=["rouge_var", "rouge_corr", "bleu_var", "bleu_corr", "bert_var", "bert_corr"],
-                        help="Evaluation metrics to compute (default: ['rouge_var', 'rouge_corr', 'bleu_var', 'bleu_corr', 'bert_var', 'bert_corr', 'kg_var', 'kg_corr'])")
+                        choices=["rouge_sim", "rouge_corr", "bleu_sim", "bleu_corr", "bert_sim", "bert_corr"],
+                        default=["rouge_sim", "rouge_corr", "bleu_sim", "bleu_corr", "bert_sim", "bert_corr"],
+                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_corr', 'bleu_sim', 'bleu_corr', 'bert_sim', 'bert_corr'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none", "word_constraint"],

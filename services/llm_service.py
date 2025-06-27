@@ -91,7 +91,7 @@ class LLMService:
             else:
                 return content.strip()
         except Exception as e:
-            logging.error(f"LLMService: Error fetching LLM response: {e}")
+            logging.warning(f"LLMService: Error fetching LLM response: {e}")
             raise e
 
     def get_available_models(self) -> list | None:

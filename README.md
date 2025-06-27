@@ -47,10 +47,10 @@ Next, run the following script. It will download the Eli5 dataset, remove column
 python preprocessing_script.py data_setup
 ```
 ### Step 2: Create sample
-Now you need to create a sample from the dataset. We decided to start with a sample size of 10,000 and exclude the following datasets: searchqa, triviaqa, newsqa, and hotpotqa. For the rationale behind this decision, please refer to our paper.  
-To generate the sample called `sample.csv` stored in the `data` directory, run the following script (this may take a few minutes):
+Now you need to create a sample from the dataset. We decided to start with a sample size of 6,000 and exclude the following datasets: searchqa, triviaqa, newsqa, paq and hotpotqa. For the rationale behind this decision, please refer to our paper.  
+To generate the sample called `sample.csv` stored in the `data` directory, run the following script:
 ```bash
-python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa triviaqa newsqa hotpotqa --nq 10000
+python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa triviaqa newsqa hotpotqa paq --nq 6000
 ```
 (After this you can delete the `data/raw` directory, as it is no longer needed.)
 

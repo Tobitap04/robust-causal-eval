@@ -145,22 +145,33 @@ class Preprocessing:
         # Load progress if output file exists
         if os.path.exists(output_path):
             out_df = pd.read_csv(output_path)
-            already_checked = set(out_df["id"].astype(str))
+            # Determine the ID of the last entry in the output file
+            if not out_df.empty:
+                last_id = str(out_df.iloc[-1]["id"])
+                # Find the index of the last processed question in the input DataFrame
+                if last_id in df["id"].astype(str).values:
+                    start_idx = df.index[df["id"].astype(str) == last_id][0] + 1
+                else:
+                    start_idx = 0
+            else:
+                start_idx = 0
         else:
             out_df = pd.DataFrame(columns=df.columns)
-            already_checked = set()
+            start_idx = 0
 
         print(f"Starting filtering questions from {input_path} with filter '{filter_type}'")
         stats = {}
         total = len(df)
         for idx, row in enumerate(df.itertuples(index=False), start=0):
-            print_progress_bar(idx+1, total)
+            # Skip already processed questions
+            if idx < start_idx:
+                continue
+            print_progress_bar(idx + 1, total)
             q_id = str(getattr(row, "id"))
             dataset = getattr(row, "dataset", None)
-            if q_id in already_checked:
-                continue
             try:
-                result = self.categorize_question(str(getattr(row, "question_processed")), str(getattr(row, "answer_processed")), filter_type)
+                result = self.categorize_question(str(getattr(row, "question_processed")),
+                                                  str(getattr(row, "answer_processed")), filter_type)
             except Exception as e:
                 logging.error(f"Preprocessing: Error with question {q_id}: {e}")
                 continue
@@ -173,6 +184,9 @@ class Preprocessing:
                 out_df.to_csv(output_path, index=False)
         out_df.to_csv(output_path, index=False)
         print("\nFiltering finished. Output saved to:", output_path)
+        print("Removed questions per dataset:")
+        for ds, count in stats.items():
+            print(f"{ds}: {count} removed")
 
     def categorize_question(self, question: str, answer: str, filter_type: str) -> str:
         """

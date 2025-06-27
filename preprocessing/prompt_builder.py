@@ -64,12 +64,16 @@ def causal_chain_filter(question: str, answer: str) -> str:
         "Task:\n"
         "Evaluate the following question-answer pair to determine whether it contains a causal chain of events.\n\n"
         "Instructions:\n"
-        "Step 0: If the question follows the structure “(Can / Could / Does / Might) A (cause / lead to / result in / effect) B?” "
-        "or uses a similar phrasing that clearly asks whether A causes B, immediately output: <result>1</result>.\n"
-        "Step 1: Otherwise, identify one main cause and one main effect from the pair that correspond to the essential focus of the question. If no clear cause-effect relation is found, output: <result>0</result>.\n"
-        "Step 2: Attempt to construct a causal chain in the form: Cause → … → Effect, where each link A → B represents a direct causal influence (not merely a correlation or temporal sequence). The intermediate steps do not have to be present in the question-answer pair.\n"
-        "Step 3: For each step A → B in the causal chain, verify that A causes B. If all steps satisfy these criteria, output: <result>1</result>. "
-        "If no valid causal chain can be constructed, explain why and output: <result>0</result>.\n\n"
+        "Step 0: If the question follows the structure “(Can / Could / Does / Might) A (cause / lead to / result in / affect) B?” "
+        "or a similar phrasing that clearly asks whether A causes B, immediately output: <result>1</result>.\n"
+        "Step 1: Otherwise, identify the main cause and main effect that reflect the core focus of the question. "
+        "If no clear cause-effect relationship can be identified, no valid causal chain can be constructed.\n"
+        "Step 2: Attempt to construct a causal chain between the identified cause and effect in the form: Cause → … → Effect, "
+        "where each link A → B represents a direct causal influence (not merely correlation or a temporal sequence). "
+        "Intermediate steps do not need to be explicitly stated in the question or answer.\n"
+        "Step 3: For each link A → B in the chain, verify that A directly causes B. "
+        "If all links fulfill this condition, output: <result>1</result>. "
+        "If no valid causal chain can be constructed, briefly explain why and output: <result>0</result>.\n\n"
     )
 
     few_shot_examples = [
@@ -133,3 +137,5 @@ def causal_chain_filter(question: str, answer: str) -> str:
     )
 
     return full_prompt
+
+print(causal_chain_filter("", ""))
