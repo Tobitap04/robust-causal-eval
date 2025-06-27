@@ -137,5 +137,3 @@ def causal_chain_filter(question: str, answer: str) -> str:
     )
 
     return full_prompt
-
-print(causal_chain_filter("", ""))

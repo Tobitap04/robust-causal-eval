@@ -12,7 +12,7 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
         prediction1 (str): First prediction string.
         prediction2 (str): Second prediction string.
         answer (str): Ground truth answer string.
-        metric (str): Metric to compute ('rouge_sim', 'rouge_corr', 'bleu_sim', 'bleu_corr', 'bert_sim', 'bert_corr').
+        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor').
 
     Returns:
         float: Computed metric score.
@@ -21,15 +21,15 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
     """
     if metric == "rouge_sim":
         return rouge(prediction1, prediction2)
-    elif metric == "rouge_corr":
+    elif metric == "rouge_cor":
         return rouge(prediction1, answer)
     elif metric == "bleu_sim":
         return bleu(prediction1, prediction2)
-    elif metric == "bleu_corr":
+    elif metric == "bleu_cor":
         return bleu(prediction1, answer)
     elif metric == "bert_sim":
         return bert(prediction1, prediction2)
-    elif metric == "bert_corr":
+    elif metric == "bert_cor":
         return bert(prediction1, answer)
     else:
         raise ValueError(f"Invalid metric specified: {metric}.")
