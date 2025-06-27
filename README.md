@@ -12,8 +12,6 @@ Optionally create a python venv or conda environment. Requires `Python >= 3.10`.
 With `Anaconda3`:
 ```
 conda create --name robust-causal-eval python=3.10 
-conda init bash
-source ~/.bashrc
 conda activate robust-causal-eval
 ```
 
