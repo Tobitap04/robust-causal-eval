@@ -7,6 +7,7 @@ At first, you need to clone the repository:
 git clone https://github.com/Tobitap04/robust-causal-eval.git
 cd robust-causal-eval
 ```
+
 Optionally create a python venv or conda environment. Requires `Python >= 3.10`.
 
 With `Anaconda3`:
@@ -21,18 +22,13 @@ python -m venv robust-causal-eval
 source robust-causal-eval/bin/activate
 ```
 
-We recommend using a `tmux` session for this project, as filtering the dataset and evaluating the models can take a significant amount of time.
-You can start a new session with the first command. To detach from the session, press `Ctrl + b`, then `d`. You can later reattach to the session with the second command without losing your progress:
-```
-tmux new -s robust-causal-eval
-tmux attach -t robust-causal-eval
-```
-
 To install all dependencies and create the required `config.env` file, run:
 ```bash
 python setup.py
 ```
 You will be prompted to enter your LLM_API_KEY and LLM_BASE_URL.
+
+> **Note:** Since filtering and evaluation steps can take a long time, we recommend running the project inside a `tmux` session to avoid interruptions.
 
 ## Data Preprocessing Instructions
 The repository already contains a carefully preprocessed and filtered sample of the [Webis-CausalQA-22](https://webis.de/data/webis-causalqa-22.html) dataset at `data/final.csv`. If you are interested in how this version was created, you can follow the steps below.  
@@ -79,5 +75,4 @@ python preprocessing_script.py sample_stats --input_path data/sample.csv
 
 - Python version: 3.10
 - Wie viel SPeicher am ende bendötigt? (venv datei checken)
-- Help function für beides scripts erwähnen
-- Temux neus chreiben weil eh falsche reinfogel oder weg lassen oer nur als empfehlung
+- Help cl function für beides scripts erwähnen
