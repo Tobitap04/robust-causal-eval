@@ -169,7 +169,6 @@ class Preprocessing:
             print_progress_bar(idx + 1, total)
             q_id = str(getattr(row, "id"))
             dataset = getattr(row, "dataset", None)
-            print()
             try:
                 result = self.categorize_question(str(getattr(row, "question_processed")),
                                                   str(getattr(row, "answer_processed")), filter_type)
@@ -202,7 +201,7 @@ class Preprocessing:
             ValueError: If the output from the LLM does not match the expected format.
         """
 
-        #print(f"Question: {question}")
+        #print(f"\nQuestion: {question}")
         #print(f"Answer: {answer}")
         response = self.llm_service.get_llm_response(
             prompt=build_prompt(question, answer, filter_type),
