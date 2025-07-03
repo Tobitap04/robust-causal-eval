@@ -169,6 +169,7 @@ class Preprocessing:
             print_progress_bar(idx + 1, total)
             q_id = str(getattr(row, "id"))
             dataset = getattr(row, "dataset", None)
+            print()
             try:
                 result = self.categorize_question(str(getattr(row, "question_processed")),
                                                   str(getattr(row, "answer_processed")), filter_type)
@@ -201,12 +202,12 @@ class Preprocessing:
             ValueError: If the output from the LLM does not match the expected format.
         """
 
-        #print("Question:", question)
-        #print("Answer:", answer)
+        #print(f"Question: {question}")
+        #print(f"Answer: {answer}")
         response = self.llm_service.get_llm_response(
             prompt=build_prompt(question, answer, filter_type),
         )
-        #print("Response:", response)
+        #print(f"Response: {response} \n\n")
         # Only output the result if it is a causal chain filter
         if filter_type == "causal_chain":
             match = re.search(r"<result>(\d+)</result>", response)

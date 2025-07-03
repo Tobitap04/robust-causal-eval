@@ -6,7 +6,7 @@ def build_prompt(question: str, answer: str, option: str) -> str:
     Args:
         question (str): The question to be analyzed.
         answer (str, optional): The answer to the question.
-        option (str): The prompting function to apply ('overall', ).
+        option (str): The prompting function to apply ('overall', 'causal_chain', 'answer').
     Returns:
         str: The constructed prompt for the LLM.
     Raises:
@@ -16,6 +16,8 @@ def build_prompt(question: str, answer: str, option: str) -> str:
         return overall_filter_v1(question)
     elif option == "causal_chain":
         return causal_chain_filter(question, answer)
+    elif option == "answer":
+        return answer_filter(question, answer)
     else:
         raise ValueError(f"Invalid filter specified: {option}.")
 
@@ -58,6 +60,11 @@ def overall_filter_v1(question: str) -> str:
 def causal_chain_filter(question: str, answer: str) -> str:
     """
     Constructs a prompt that evaluates whether a given question-answer pair contains a causal chain of events.
+    Args:
+        question (str): The question to be analyzed.
+        answer (str): The answer to the question.
+    Returns:
+        str: The constructed prompt for the LLM.
     """
 
     instruction = (
@@ -127,7 +134,90 @@ def causal_chain_filter(question: str, answer: str) -> str:
             f"{ex['evaluation']}\n\n"
         )
 
-    # Append user input
+    # Append example to analyse
+    full_prompt = (
+        instruction
+        + example_block
+        + f"Now analyze the following pair in the same way:\n"
+        f"Question: {question}\n"
+        f"Answer: {answer}\n"
+    )
+
+    return full_prompt
+
+def answer_filter(question: str, answer: str) -> str:
+    """
+    Constructs a prompt that evaluates whether the answer of a given question-answer pair is appropriate in content and form.
+    Args:
+        question (str): The question to be analyzed.
+        answer (str): The answer to the question.
+    Returns:
+        str: The constructed prompt for the LLM.
+    """
+
+    instruction = (
+        "Task:\n"
+        "Evaluate the following question–answer pair to determine whether the answer is appropriate in content and form.\n\n"
+        "Instructions:\n"
+        "Assess the answer based on the following criteria:\n"
+        "\t1.\tRelevance: Does the answer directly and fully address the question?\n"
+        "\t2.\tObjectivity: Is the answer factual and neutral, free from personal opinions or emotional language?\n"
+        "\t3.\tClarity: Is the answer clear, precise, and free from rambling or vagueness?\n"
+        "\t4.\tFormatting: Is the answer cleanly presented, free from formatting like brackets, hyperlinks, or edit notes?\n"
+        "If any of these criteria are not met, briefly explain why and output: <result>0</result>\n"
+        "If the answer meets all criteria and fits the question well, output: <result>1</result>\n\n"
+    )
+
+    few_shot_examples = [
+        {
+            "question": "What are the side effects of losartan potassium 50mg?",
+            "answer": "[‘diarrhea.’, ‘stomach pain.’, ‘muscle cramps.’, ‘leg or back pain.’, ‘dizziness.’, ‘headache.’, ‘sleep problems (insomnia)’, ‘tiredness, and.’]",
+            "reason": "Poor formatting (brackets, Python-style list, incomplete final item).",
+            "result": "<result>0</result>"
+        },
+        {
+            "question": "what causes eyelid to droop",
+            "answer": "a stroke, brain tumor, or cancer of the nerves or muscles.",
+            "reason": "Factual, concise, and clearly answers the question.",
+            "result": "<result>1</result>"
+        },
+        {
+            "question": "How is it that grown men have started enjoying My Little Pony so much, and why is this not creeping more people out?",
+            "answer": (
+                "It started on 4chan as a troll, but then a lot of people noticed that it does not actually suck. "
+                "This is due to Lauren Faust designed the series from the ground up to be entertaining to not just the 3-7 demographic, but that the parents would not hate.\n\n"
+                "THe story lines while cliche and predictable, are entertaining. The VA talent, would be the best and most talented if only they had one or two more names. "
+                "The characters are far more tha the stereotypes they initially present as, characters actually develop and change, mostly.\n\n"
+                "The episodes range from both Slice of Life, to disney esque stories, to traditional adventure. Not to mention the lessons presented, help remind folks of how we should act. "
+                "References to other amazing works see the episodes Read it and weep, Canterlot wedding, and Bridle gossip.\n\n"
+                "EDIT: I'm more than open to talking more on this if ya want to. I would especially look into seeing one of the better episodes, the season 2 opener would be my choice if you really want to see why the show is great."
+            ),
+            "reason": "Excessively long, subjective, includes personal opinions, off-topic content, and an edit note.",
+            "result": "<result>0</result>"
+        },
+        {
+            "question": "does neck pain cause shoulder pain?",
+            "answer": (
+                "a pinched nerve in your neck can cause pain that radiates toward your shoulder. this is also known as cervical radiculopathy. "
+                "cervical radiculopathy most often comes from changes in your spine due to aging or injury. bone spurs can cause a pinching of the nerves that run through the hollow space in the vertebrae."
+            ),
+            "reason": "Clear, relevant, and well-explained without unnecessary details.",
+            "result": "<result>1</result>"
+        },
+    ]
+
+    # Build the few-shot section
+    example_block = ""
+    for idx, ex in enumerate(few_shot_examples, 1):
+        example_block += (
+            f"Example {idx}:\n"
+            f"Question: {ex['question']}\n"
+            f"Answer: {ex['answer']}\n"
+            f"Reason: {ex['reason']}\n"
+            f"{ex['result']}\n\n"
+        )
+
+    # Append example to analyse
     full_prompt = (
         instruction
         + example_block
