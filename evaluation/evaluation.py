@@ -78,10 +78,16 @@ class Evaluation:
                        res2 = inprocessing_func(prompt2_preprocessed, self.inprocessing, self.llm_service, self.temperature)
                        res1_postprocessed = postprocessing_func(res1, self.postprocessing)
                        res2_postprocessed = postprocessing_func(res2, self.postprocessing)
+                       #print(f"Question 1:\n {prompt1}")
+                       #print(f"Response 1:\n {res1_postprocessed}")
+                       #print(f"Question 2:\n {prompt2}")
+                       #print(f"Response 2:\n {res2_postprocessed}")
+                       #print(f"Ground Truth Answer:\n {answer_text}")
                        for metric in self.metrics:
                            try:
                                score = compute_metric(res1_postprocessed, res2_postprocessed, answer_text, metric)
                                results[metric][perturbation].append(score)
+                               #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
                                logging.error(f"Evaluation: Error while computing metric '{metric}': {e}")

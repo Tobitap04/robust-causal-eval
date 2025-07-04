@@ -208,7 +208,7 @@ class Preprocessing:
         )
         #print(f"Response: {response} \n\n")
         # Only output the result if it is a causal chain filter
-        if filter_type == "causal_chain":
+        if filter_type == "causal_chain" or filter_type == "answer":
             match = re.search(r"<result>(\d+)</result>", response)
             if match:
                 return match.group(1)

@@ -84,7 +84,6 @@ class LLMService:
             response = self.client.chat.completions.create(**params)
 
             content = response.choices[0].message.content
-
             # Remove the <think> tag of reasoning if present
             if "</think>" in content:
                 return content.split("</think>", 1)[-1].strip()
