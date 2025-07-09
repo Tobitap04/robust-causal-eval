@@ -6,56 +6,21 @@ def build_prompt(question: str, answer: str, option: str) -> str:
     Args:
         question (str): The question to be analyzed.
         answer (str, optional): The answer to the question.
-        option (str): The prompting function to apply ('overall', 'causal_chain', 'answer').
+        option (str): The prompting function to apply ('causal_chain', 'answer', 'question').
     Returns:
         str: The constructed prompt for the LLM.
     Raises:
         ValueError: If prompting option is not valid.
     """
-    if option == "overall":
-        return overall_filter_v1(question)
-    elif option == "causal_chain":
+
+    if option == "causal_chain":
         return causal_chain_filter(question, answer)
     elif option == "answer":
         return answer_filter(question, answer)
+    elif option == "question":
+        return question_filter(question)
     else:
         raise ValueError(f"Invalid filter specified: {option}.")
-
-
-def overall_filter_v1(question: str) -> str:
-    """Old version of the overall filter prompt. Now deprecated."""
-    instruction = (
-        "You are an expert at identifying whether a question is truly causal, has a clear reference, and is not nonsensical.\n"
-        "A causal question seeks to identify the cause or reason behind an event or phenomenon.\n"
-        "It should involve a clear causal relationship or chain of events, not merely an explanation of purpose, intention, effect, definition, technical mechanisms, or historical facts without a causal link.\n"
-        "For each input, answer only with \"1\" (if the question is causal, clear, and sensible) or \"0\" (otherwise) without any additional symbols before or after.\n"
-        "Do not provide any explanation or further examples.\n\n"
-    )
-
-    few_shot_examples = [
-        {"input": "what is the cause of dry mouth while sleeping", "output": "1"}, # Clear causal question
-        {"input": "Why was he banned?", "output": "0"},  # Unclear reference
-        {"input": "direct cause definition", "output": "0"},  # Definition
-        {"input": "can beer cause liver damage", "output": "1"}, # Clear causal question
-        {"input": "Why is einsteinium?", "output": "0"},  # Nonsensical question
-        {"input": "why was plant taxonomy developed?", "output": "0"},  # Purpose
-        {"input": "what is the most common cause of diarrhea?", "output": "1"},  # Clear causal question
-        {"input": "why was the united states concerned about nuclear missiles in cuba?", "output": "0"}, # Intention
-        {"input": "how did she die after she returned from a trip to england to sell her jewels in 1793?", "output": "0"}, # Historical fact without causal mechanism and unclear reference
-        #{"input": "why is a voltmeter needed in a circuit?", "output": "0"},
-    ]
-
-    # Construct the prompt with instruction and shuffled examples
-    random.shuffle(few_shot_examples)
-    examples = ""
-    for idx, ex in enumerate(few_shot_examples, 1):
-        examples += f"Example {idx}:\nInput:{ex['input']}\nOutput:{ex['output']}\n\n"
-    prompt = (
-            instruction
-            + examples
-            + f"Now analyze only the following question in the same way:\nInput:{question}\nOutput:"
-    )
-    return prompt
 
 def causal_chain_filter(question: str, answer: str) -> str:
     """
@@ -224,6 +189,73 @@ def answer_filter(question: str, answer: str) -> str:
         + f"Now analyze the following pair in the same way:\n"
         f"Question: {question}\n"
         f"Answer: {answer}\n"
+    )
+
+    return full_prompt
+
+def question_filter(question: str) -> str:
+    """
+    Constructs a prompt that evaluates whether a question is clearly phrased and free of contextual ambiguity.
+
+    Args:
+        question (str): The question to be analyzed.
+
+    Returns:
+        str: The constructed prompt for the LLM.
+    """
+
+    instruction = (
+        "Task:\n"
+        "Evaluate the following question to determine whether it is clearly phrased and free of contextual ambiguity.\n\n"
+        "Instructions:\n"
+        "Assess each question based on the following two criteria:\n"
+        "\t1.\tClarity: Can a single, clear question be identified, or does the phrasing contain multiple questions?\n"
+        "\t2.\tContext Independence: Can the question be understood and answered without relying on external context (e.g., who “he” refers to or which event is meant)?\n"
+        "If either criterion is not met, briefly explain why and output:\n"
+        "<result>0</result>\n"
+        "If both criteria are fully met, output:\n"
+        "<result>1</result>\n\n"
+    )
+
+    few_shot_examples = [
+        {
+            "question": "Does neck pain cause shoulder pain?",
+            "reason": "Clearly phrased and context-independent.",
+            "result": "<result>1</result>"
+        },
+        {
+            "question": "Why did he die?",
+            "reason": "Unclear who “he” refers to → context-sensitive.",
+            "result": "<result>0</result>"
+        },
+        {
+            "question": "Why did the Berlin Blockade happen?",
+            "reason": "Specific and self-contained question.",
+            "result": "<result>1</result>"
+        },
+        {
+            "question": "What are impurities in alcohol and why do they matter? Is drinking alcohol with more impurities less safe? Or does it just taste worse?",
+            "reason": "Multiple questions asked in one → lacks clarity.",
+            "result": "<result>0</result>"
+        },
+    ]
+
+    # Build the few-shot section
+    example_block = ""
+    for idx, ex in enumerate(few_shot_examples, 1):
+        example_block += (
+            f"Example {idx}:\n"
+            f"Question: {ex['question']}\n"
+            f"Reason: {ex['reason']}\n"
+            f"{ex['result']}\n\n"
+        )
+
+    # Append example to analyse
+    full_prompt = (
+        instruction
+        + example_block
+        + f"Now analyze the following question in the same way:\n"
+        f"Question: {question}\n"
     )
 
     return full_prompt

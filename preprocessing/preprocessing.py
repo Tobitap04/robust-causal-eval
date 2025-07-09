@@ -201,18 +201,13 @@ class Preprocessing:
             ValueError: If the output from the LLM does not match the expected format.
         """
 
-        #print(f"\nQuestion: {question}")
-        #print(f"Answer: {answer}")
         response = self.llm_service.get_llm_response(
             prompt=build_prompt(question, answer, filter_type),
         )
-        #print(f"Response: {response} \n\n")
-        # Only output the result if it is a causal chain filter
-        if filter_type == "causal_chain" or filter_type == "answer":
-            match = re.search(r"<result>(\d+)</result>", response)
-            if match:
-                return match.group(1)
-            else:
-               raise ValueError(f"Unexpected response format for filter '{filter_type}': {response}")
 
-        return response
+        # Output only the result itself
+        match = re.search(r"<result>(\d+)</result>", response)
+        if match:
+            return match.group(1)
+        else:
+           raise ValueError(f"Unexpected response format for filter '{filter_type}': {response}")
