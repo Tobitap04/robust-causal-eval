@@ -1,5 +1,3 @@
-import random
-
 def build_prompt(question: str, answer: str, option: str) -> str:
     """
     Builds a prompt for the LLM to classify a question.

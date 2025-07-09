@@ -17,7 +17,7 @@ def print_progress_bar(current: int, total: int, bar_length: int = 40) -> None:
 
 def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
                              temperature: float, perturbation_levels: list[str],
-                             metrics: list[str], avg_results: dict) -> None:
+                             metrics: list[str], avg_results: dict, datasets: list[str]) -> None:
     """
     Prints the results of the causal robustness evaluation in a formatted table.
     Args:
@@ -30,12 +30,14 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
         perturbation_levels (list[str]): List of perturbation levels tested.
         metrics (list[str]): List of metrics computed during evaluation.
         avg_results (dict): Dictionary containing average results for each metric and perturbation level.
+        datasets (list[str]): List of datasets included in the evaluation.
     """
 
     print("\n\nCausal Robustness Evaluation")
     print("=" * 30)
     print("Input Parameters:")
     print(f"  - LLM:                  {llm_name}")
+    print(f"  - Datasets:             {', '.join(datasets)}")
     print(f"  - Number of Questions:  {num_questions}")
     print(f"  - Preprocessing:        {preprocessing}")
     print(f"  - Inprocessing:         {inprocessing}")
@@ -99,6 +101,11 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbation
                         help="Temperature setting for the LLM (default: 0)")
 
     parser.add_argument("--sample_path", type=str, default="data/sample.csv", help="Path to sample of the  Webis-CausalQA dataset.") # TODO: Change to data/final.csv
+
+    parser.add_argument("--datasets", type=str, nargs='+',
+                        default=["eli5", "gooaq", "msmarco", "naturalquestions", "squad2"],
+                        choices=["eli5", "gooaq", "msmarco", "naturalquestions", "squad2"],
+                        help="Names of the datasets to include in the evaluation (default: ['eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'])")
 
     return parser.parse_args()
 

@@ -50,7 +50,6 @@ class LLMService:
            time.sleep(getattr(exc, "period_remaining", 0))
 
 
-
     @retry(
        wait=wait_exponential(multiplier=1, min=2, max=30),
        stop=stop_after_attempt(7),

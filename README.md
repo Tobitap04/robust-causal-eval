@@ -8,7 +8,8 @@ git clone https://github.com/Tobitap04/robust-causal-eval.git
 cd robust-causal-eval
 ```
 
-Optionally create a python venv or conda environment. Requires `Python >= 3.10`.
+We recommend using `Python 3.10`, as this is the version the project was developed and tested with.  
+Optionally create a python venv or conda environment. 
 
 With `Anaconda3`:
 ```
@@ -58,10 +59,9 @@ To run the filtering, use the following command with the appropriate filter name
 python preprocessing_script.py filter_questions --filter causal_chain --input_path data/sample.csv --output_path data/filtered_causal_chain.csv
 ```
 The available filters are:
-- `causal_chain`: This filter removes all question and answer pairs that do not exhibit a causal chain.
-- `filter_2`: ...
-- `filter_3`: ...
-- `filter_4`: ...
+- `causal_chain`: Removes all question-answer pairs that do not clearly exhibit a causal chain between the question and the answer.
+- `answer`: Removes all question-answer pairs where the answer is not relevant, accurate, or appropriately formatted.
+- `question`: Removes all question-answer pairs where the question is not clearly stated or contains contextual ambiguities.
 
 To refine our filtering prompts, we used this command to evaluate the dataset after each step and identify common issues. It displays `nq` random entries from the specified file:
 ```bash

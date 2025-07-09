@@ -11,7 +11,7 @@ class Evaluation:
 
     def __init__(self, llm_service: LLMService, llm: str, nq: int,
                  perturbs: list[str], metrics: list[str],
-                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str) -> None:
+                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str, datasets: list[str]) -> None:
         """
         Initializes the Evaluation class with the LLM service and evaluation parameters.
         Args:
@@ -25,6 +25,7 @@ class Evaluation:
             postproc (str): Postprocessing method for the questions.
             temp (float): Temperature to use.
             sample_path (str): Path to sample of the  Webis-CausalQA dataset.
+            datasets (list[str]): Datasets to include in the evaluation.
         """
         self.llm_service = llm_service
         self.llm_name = llm # Format checked in llm_service.py
@@ -40,6 +41,7 @@ class Evaluation:
             raise ValueError("Temperature must be between 0 and 2.")
         self.temperature = temp
         self.sample_path = sample_path # Checked in run()
+        self.datasets = datasets  # Format checked in get_cl_args()
 
     def run(self) -> None:
         """
@@ -49,9 +51,10 @@ class Evaluation:
         """
         # Create question sample from the dataset
         df = pd.read_csv(self.sample_path)
-        if len(df) < self.num_questions:
+        df_filtered = df[df['dataset'].isin(self.datasets)]
+        if len(df_filtered) < self.num_questions:
             raise ValueError("Number of questions to evaluate is bigger than the dataset size.")
-        sampled_df = df.sample(n=self.num_questions)
+        sampled_df = df_filtered.sample(n=self.num_questions)
         sampled_questions = sampled_df.to_dict(orient='records')
 
         results = {metric: {perturb: [] for perturb in self.perturbation_levels} for metric in self.metrics}
@@ -100,5 +103,5 @@ class Evaluation:
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}
 
-        print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions, temperature=self.temperature, preprocessing=self.preprocessing, inprocessing=self.inprocessing, postprocessing=self.postprocessing, metrics=self.metrics, avg_results=avg_results, perturbation_levels=self.perturbation_levels)
+        print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions, temperature=self.temperature, preprocessing=self.preprocessing, inprocessing=self.inprocessing, postprocessing=self.postprocessing, metrics=self.metrics, avg_results=avg_results, perturbation_levels=self.perturbation_levels, datasets=self.datasets)
 

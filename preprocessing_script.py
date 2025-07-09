@@ -30,6 +30,5 @@ def main():
             raise ValueError("input_path must be specified for sample_stats function.")
         Preprocessing.sample_stats(input_path=args.input_path)
 
-
 if __name__ == "__main__":
     main()
