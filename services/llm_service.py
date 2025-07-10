@@ -31,7 +31,7 @@ class LLMService:
             raise ValueError("LLM_BASE_URL is not set")
 
         # Check if the provided LLM name is available
-        if llm_name not in self.get_available_models():
+        if self.base_url == "https://ai-gateway.uni-paderborn.de" and llm_name not in self.get_available_models():
             raise ValueError(f"LLM model '{llm_name}' is not available. Available models: {self.get_available_models()}. Please check the model name.")
         self.llm_name = llm_name
         self.client = openai.OpenAI(
@@ -89,7 +89,7 @@ class LLMService:
             else:
                 return content.strip()
         except Exception as e:
-            logging.warning(f"LLMService: Error fetching LLM response: {e}")
+            logging.warning(f"LLMService: Error fetching LLM response: {e}\n\n")
             raise e
 
     def get_available_models(self) -> list | None:

@@ -173,7 +173,7 @@ class Preprocessing:
                 result = self.categorize_question(str(getattr(row, "question_processed")),
                                                   str(getattr(row, "answer_processed")), filter_type)
             except Exception as e:
-                logging.error(f"Preprocessing: Error with question {q_id}: {e}")
+                logging.error(f"Preprocessing: Error with question {q_id}: {e}\n\n")
                 continue
             if result == "1":
                 out_df = pd.concat([out_df, pd.DataFrame([row])], ignore_index=True)

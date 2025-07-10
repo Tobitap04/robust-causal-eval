@@ -67,7 +67,7 @@ class Evaluation:
                question_text = question.get('question_processed')
                answer_text = question.get('answer_processed')
                if question_text is None or answer_text is None:
-                   logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.")
+                   logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.\n\n")
                    continue
                for perturbation in self.perturbation_levels:
                    #print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
@@ -93,11 +93,11 @@ class Evaluation:
                                #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
-                               logging.error(f"Evaluation: Error while computing metric '{metric}': {e}")
+                               logging.error(f"Evaluation: Error while computing metric '{metric}': {e}\n\n")
                    except Exception as e:
-                       logging.error(f"Evaluation: Error during perturbation '{perturbation}': {e}")
+                       logging.error(f"Evaluation: Error during perturbation '{perturbation}': {e}\n\n")
            except Exception as e:
-               logging.error(f"Evaluation: Error with question {idx}: {e}")
+               logging.error(f"Evaluation: Error with question {idx}: {e}\n\n")
         print_progress_bar(num_questions, num_questions)
         avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}

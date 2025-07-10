@@ -1,5 +1,10 @@
+import random
+import spacy
+nlp = spacy.load("en_core_web_sm")
 import nlpaug.augmenter.char as nac
 import nlpaug.augmenter.word as naw
+from nlpaug.augmenter.word import ContextualWordEmbsAug
+from textattack.shared.attacked_text import AttackedText
 
 def perturbation_func(question: str, level: str) -> str:
     """
@@ -49,15 +54,20 @@ def char_level(question: str) -> str:
 
 def word_level(question: str) -> str:
     """
-    Word-level perturbation function.
+    Word-level perturbation function using BERT (contextual embeddings), with named entity protection.
     Args:
         question (str): The question to perturb.
     Returns:
         str: The perturbed question with word-level changes.
     """
-    # TODO: Refine word-level perturbation (Better synonyms, antonyms, etc.)
-    # nlplaug implementation
-    aug = naw.SynonymAug(aug_src='wordnet', lang='eng')
+    doc = nlp(question)
+    protected = [ent.text for ent in doc.ents]  # Schütze Eigennamen, Orte etc.
+
+    aug = ContextualWordEmbsAug(
+        model_path='roberta-base',
+        action='substitute',
+        stopwords=protected,
+    )
     perturbed_question = aug.augment(question)[0]
     return perturbed_question
 

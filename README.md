@@ -76,3 +76,4 @@ python preprocessing_script.py sample_stats --input_path data/sample.csv
 - Python version: 3.10
 - Wie viel SPeicher am ende bendötigt? (venv datei checken)
 - Help cl function für beides scripts erwähnen
+- llm parameter für eval und filter erwähnen -> Am besten verschieden für keinen bias

@@ -62,7 +62,7 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 
     print("-" * (18 * len(headers)))
 
-def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbations, metrics and processing options
+def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbations and processing options
     """
     Parses command line arguments for evaluating LLM robustness on causal questions.
     Returns: argparse.Namespace: Parsed command line arguments.
@@ -81,9 +81,9 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add remaining perturbation
                         help="Perturbation levels to test (default: ['none', 'char', 'word', 'sentence', 'language', 'all'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
-                        choices=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "bert_sim", "bert_cor"],
-                        default=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "bert_sim", "bert_cor"],
-                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor'])")
+                        choices=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "bert_sim", "bert_cor", "chrf_sim", "chrf_cor", "sbert_sim", "sbert_cor", "nli_sim", "nli_cor"],
+                        default=["rouge_sim", "rouge_cor", "chrf_sim", "chrf_cor", "sbert_sim", "sbert_cor", "nli_sim", "nli_cor"],
+                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_cor', chrf_sim', 'chrf_cor', 'sbert_sim', 'sbert_cor', 'nli_sim', 'nli_cor'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none", "word_constraint"],
