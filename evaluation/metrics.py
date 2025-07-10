@@ -139,7 +139,6 @@ nli_model_name = "roberta-large-mnli"
 nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name)
 nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name)
 
-
 def nli_entailment_score(hypothesis: str, reference: str) -> float:
     """
     Returns the average probability (0–1) that hypothesis and reference mutually entail each other.
@@ -176,6 +175,6 @@ print()
 
 print("ROUGE-L:", rouge(hyp, ref))
 print("CHRF:", chrf(hyp, ref))
-print("SBERT Similarity:", sbert_similarity(hyp, ref))
+print("Cosine Similarity Embed:", cos_sim_embed(hyp, ref))
 print("NLI Entailment Score:", nli_entailment_score(ref, hyp))
 """
