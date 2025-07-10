@@ -48,7 +48,6 @@ def char_level(question: str) -> str:
     perturbed_question = aug2.augment(perturbed_question)[0]
     return perturbed_question
 
-nlp = spacy.load("en_core_web_sm")
 
 def word_level(question: str) -> str:
     """
@@ -58,16 +57,7 @@ def word_level(question: str) -> str:
     Returns:
         str: The perturbed question with word-level changes.
     """
-    doc = nlp(question)
-    protected = [ent.text for ent in doc.ents]  # Schütze Eigennamen, Orte etc.
-
-    aug = ContextualWordEmbsAug(
-        model_path='roberta-base',
-        action='substitute',
-        stopwords=protected,
-    )
-    perturbed_question = aug.augment(question)[0]
-    return perturbed_question
+    return ""
 
 
 def sentence_level(question: str) -> str:
