@@ -153,11 +153,12 @@ def nli_entailment_score(hypothesis: str, reference: str) -> float:
         logits = nli_model(**inputs).logits
     probs = torch.softmax(logits, dim=-1).squeeze()
 
-    return probs[2].item() # + probs[1].item()  # Entailment + Neutral probabilities
+    return probs[2].item()  # + probs[1].item()  # Entailment + Neutral probabilities
 
 
-hyp = """In the lungs (pulmonary)."""
-ref = """the pulmonary venous system"""
+"""
+hyp = "Black."
+ref = "Black."
 
 print("Hypothesis:", hyp)
 print("Reference:", ref)
@@ -167,3 +168,4 @@ print("ROUGE-L:", rouge(hyp, ref))
 print("CHRF:", chrf(hyp, ref))
 print("SBERT Similarity:", sbert_similarity(hyp, ref))
 print("NLI Entailment Score:", nli_entailment_score(ref, hyp))
+"""

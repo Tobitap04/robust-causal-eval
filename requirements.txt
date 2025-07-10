@@ -10,4 +10,8 @@ pandas~=2.2.3
 nlpaug~=1.1.11
 nlp~=0.4.0
 transformers~=4.52.4
-gensim
+django-ratelimit2~=0.4.2
+torch~=2.6.0
+sacrebleu~=2.5.1
+sentence-transformers~=5.0.0
+spacy~=3.8.7

@@ -1,10 +1,7 @@
-import random
 import spacy
-nlp = spacy.load("en_core_web_sm")
 import nlpaug.augmenter.char as nac
 import nlpaug.augmenter.word as naw
 from nlpaug.augmenter.word import ContextualWordEmbsAug
-from textattack.shared.attacked_text import AttackedText
 
 def perturbation_func(question: str, level: str) -> str:
     """
@@ -51,6 +48,7 @@ def char_level(question: str) -> str:
     perturbed_question = aug2.augment(perturbed_question)[0]
     return perturbed_question
 
+nlp = spacy.load("en_core_web_sm")
 
 def word_level(question: str) -> str:
     """
