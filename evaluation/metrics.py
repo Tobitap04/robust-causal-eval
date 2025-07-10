@@ -38,10 +38,10 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
         return chrf(prediction1, prediction2)
     elif metric == "chrf_cor":
         return chrf(prediction1, answer)
-    elif metric == "sbert_sim":
-        return sbert_similarity(prediction1, prediction2)
-    elif metric == "sbert_cor":
-        return sbert_similarity(prediction1, answer)
+    elif metric == "embed_sim":
+        return cos_sim_embed(prediction1, prediction2)
+    elif metric == "embed_cor":
+        return cos_sim_embed(prediction1, answer)
     elif metric == "nli_sim":
         return nli_entailment_score(prediction1, prediction2)
     elif metric == "nli_cor":
@@ -119,41 +119,51 @@ def chrf(hypothesis: str, reference: str) -> float:
     return chrf_metric.sentence_score(hypothesis, [reference]).score / 100
 
 
-sbert_model = SentenceTransformer("all-mpnet-base-v2")
+embed_model = SentenceTransformer("all-mpnet-base-v2")
 
-def sbert_similarity(hypothesis: str, reference: str) -> float:
+def cos_sim_embed(hypothesis: str, reference: str) -> float:
     """
-    Computes cosine similarity between SBERT embeddings of two texts.
+    Computes the cosine similarity between the embeddings of two texts.
     Args:
         hypothesis (str): The generated answer.
         reference (str): The ground truth answer or another generated answer.
     Returns:
-        float: Cosine similarity score between the two texts.
+        float: Cosine similarity score between the two text embeddings.
     """
-    emb1 = sbert_model.encode(hypothesis, convert_to_tensor=True)
-    emb2 = sbert_model.encode(reference, convert_to_tensor=True)
-    return util.cos_sim(emb1, emb2).item()
+    embeddings = embed_model.encode([hypothesis, reference], convert_to_tensor=True)
+    cosine_similarity = util.cos_sim(embeddings[0], embeddings[1]).item()
+    return cosine_similarity
 
 
 nli_model_name = "roberta-large-mnli"
 nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name)
 nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name)
 
+
 def nli_entailment_score(hypothesis: str, reference: str) -> float:
     """
-    Returns the probability (0–1) that the hypothesis entails the reference.
+    Returns the average probability (0–1) that hypothesis and reference mutually entail each other.
     Args:
         hypothesis (str): The generated answer.
         reference (str): The ground truth answer or another generated answer.
     Returns:
-        float: Probability of entailment.
+        float: Average probability for entailment.
     """
-    inputs = nli_tokenizer(reference, hypothesis, return_tensors="pt", truncation=True)
+    # Direction 1: hypothesis -> reference
+    inputs1 = nli_tokenizer(hypothesis, reference, return_tensors="pt", truncation=True)
     with torch.no_grad():
-        logits = nli_model(**inputs).logits
-    probs = torch.softmax(logits, dim=-1).squeeze()
+        logits1 = nli_model(**inputs1).logits
+    probs1 = torch.softmax(logits1, dim=-1).squeeze()
+    score1 = probs1[2].item()
 
-    return probs[2].item()  # + probs[1].item()  # Entailment + Neutral probabilities
+    # Direction 2: reference -> hypothesis
+    inputs2 = nli_tokenizer(reference, hypothesis, return_tensors="pt", truncation=True)
+    with torch.no_grad():
+        logits2 = nli_model(**inputs2).logits
+    probs2 = torch.softmax(logits2, dim=-1).squeeze()
+    score2 = probs2[2].item()
+
+    return (score1 + score2) / 2
 
 
 """
