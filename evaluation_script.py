@@ -17,6 +17,5 @@ def main():
     evaluation.run()
 
 if __name__ == "__main__":
-   #main()
-   llm_service = LLMService(llm_name="hi")
+   main()
 
