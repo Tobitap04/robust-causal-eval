@@ -163,16 +163,3 @@ def nli_entailment_score(hypothesis: str, reference: str) -> float:
     score2 = probs2[2].item()
 
     return (score1 + score2) / 2
-
-
-""" Test
-question = "why are cats pupils oval?"
-hyp1 = "artificially low interest rates"
-hyp2 = "Government intervention and manipulation."
-ref = "cats and other animals that are active in the day and night have pupils shaped like vertical slits because that shape allows the pupil to change size much faster than the round pupils we humans have."
-
-print("ROUGE-L Score:", rouge(hyp2, hyp1))
-print("CHRF Score:", chrf(hyp2, hyp1))
-print("SBert Score:", sBert(hyp2, hyp1))
-print("NLI Entailment Score:", nli_entailment_score(hyp2, hyp1))
-"""
