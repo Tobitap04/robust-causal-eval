@@ -56,7 +56,7 @@ class LLMService:
        before_sleep=handle_rate_limit,
     )
     @limits(calls=RPM, period=60)
-    def get_llm_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
+    def get_llm_response(self, prompt: str, temperature: float = 1, max_tokens: int = None) -> str:
         """
         Fetches a response from the LLM based on the provided prompt.
         Should always be covered in try-except block to handle exceptions.
@@ -68,7 +68,7 @@ class LLMService:
             RetryError: If the request fails after retries.
         """
         try:
-            messages: list[openai.types.chat.ChatCompletionUserMessageParam] = [
+            messages = [
                 {"role": "user", "content": prompt}
             ]
             params = {
@@ -76,7 +76,7 @@ class LLMService:
                 "messages": messages,
             }
             if max_tokens is not None:
-                params["max_tokens"] = str(max_tokens)
+                params["max_completion_tokens"] = str(max_tokens)
             if temperature is not None:
                 params["temperature"] = str(temperature)
 

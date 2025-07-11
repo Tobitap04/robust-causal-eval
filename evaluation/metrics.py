@@ -15,7 +15,7 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
         prediction1 (str): First prediction string.
         prediction2 (str): Second prediction string.
         answer (str): Ground truth answer string.
-        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 'sbert_sim', 'sbert_cor', 'nli_sim', 'nli_cor').
+        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 'sBert_sim', 'sBert_cor', 'nli_sim', 'nli_cor').
 
     Returns:
         float: Computed metric score.
@@ -38,10 +38,10 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
         return chrf(prediction1, prediction2)
     elif metric == "chrf_cor":
         return chrf(prediction1, answer)
-    elif metric == "embed_sim":
-        return cos_sim_embed(prediction1, prediction2)
-    elif metric == "embed_cor":
-        return cos_sim_embed(prediction1, answer)
+    elif metric == "sBert_sim":
+        return sBert(prediction1, prediction2)
+    elif metric == "sBert_cor":
+        return sBert(prediction1, answer)
     elif metric == "nli_sim":
         return nli_entailment_score(prediction1, prediction2)
     elif metric == "nli_cor":
@@ -119,9 +119,9 @@ def chrf(hypothesis: str, reference: str) -> float:
     return chrf_metric.sentence_score(hypothesis, [reference]).score / 100
 
 
-embed_model = SentenceTransformer("all-mpnet-base-v2")
+sBert_model = SentenceTransformer("all-mpnet-base-v2")
 
-def cos_sim_embed(hypothesis: str, reference: str) -> float:
+def sBert(hypothesis: str, reference: str) -> float:
     """
     Computes the cosine similarity between the embeddings of two texts.
     Args:
@@ -130,7 +130,7 @@ def cos_sim_embed(hypothesis: str, reference: str) -> float:
     Returns:
         float: Cosine similarity score between the two text embeddings.
     """
-    embeddings = embed_model.encode([hypothesis, reference], convert_to_tensor=True)
+    embeddings = sBert_model.encode([hypothesis, reference], convert_to_tensor=True)
     cosine_similarity = util.cos_sim(embeddings[0], embeddings[1]).item()
     return cosine_similarity
 
@@ -165,16 +165,14 @@ def nli_entailment_score(hypothesis: str, reference: str) -> float:
     return (score1 + score2) / 2
 
 
-"""
-hyp = "Black."
-ref = "Black."
+""" Test
+question = "why are cats pupils oval?"
+hyp1 = "artificially low interest rates"
+hyp2 = "Government intervention and manipulation."
+ref = "cats and other animals that are active in the day and night have pupils shaped like vertical slits because that shape allows the pupil to change size much faster than the round pupils we humans have."
 
-print("Hypothesis:", hyp)
-print("Reference:", ref)
-print()
-
-print("ROUGE-L:", rouge(hyp, ref))
-print("CHRF:", chrf(hyp, ref))
-print("Cosine Similarity Embed:", cos_sim_embed(hyp, ref))
-print("NLI Entailment Score:", nli_entailment_score(ref, hyp))
+print("ROUGE-L Score:", rouge(hyp2, hyp1))
+print("CHRF Score:", chrf(hyp2, hyp1))
+print("SBert Score:", sBert(hyp2, hyp1))
+print("NLI Entailment Score:", nli_entailment_score(hyp2, hyp1))
 """
