@@ -1,5 +1,4 @@
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
-from openai.types.chat import ChatCompletionUserMessageParam
+from tenacity import retry, wait_exponential, stop_after_attempt
 from ratelimit import limits, RateLimitException
 from dotenv import load_dotenv
 import requests
@@ -49,12 +48,12 @@ class LLMService:
        if isinstance(exc, RateLimitException):
            time.sleep(getattr(exc, "period_remaining", 0))
 
-
     @retry(
        wait=wait_exponential(multiplier=1, min=2, max=30),
        stop=stop_after_attempt(7),
        before_sleep=handle_rate_limit,
     )
+
     @limits(calls=RPM, period=60)
     def get_llm_response(self, prompt: str, temperature: float = 1, max_tokens: int = None) -> str:
         """
@@ -81,7 +80,6 @@ class LLMService:
                 params["temperature"] = str(temperature)
 
             response = self.client.chat.completions.create(**params)
-
             content = response.choices[0].message.content
             # Remove the <think> tag of reasoning if present
             if "</think>" in content:

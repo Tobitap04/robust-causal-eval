@@ -45,7 +45,7 @@ python preprocessing_script.py data_setup
 Now you need to create a sample from the dataset. We decided to start with a sample size of 6,000 and exclude the following datasets: searchqa, triviaqa, newsqa, paq and hotpotqa. For the rationale behind this decision, please refer to our paper.  
 To generate the sample called `sample.csv` stored in the `data` directory, run the following script:
 ```bash
-python preprocessing_script.py create_sample --output_path data/sample.csv --exclude searchqa triviaqa newsqa hotpotqa paq --nq 6000
+python preprocessing_script.py create_sample --output_path data/unfiltered_sample.csv --exclude searchqa triviaqa newsqa hotpotqa paq --nq 6000
 ```
 (After this you can delete the `data/raw` directory, as it is no longer needed.)
 
@@ -56,7 +56,7 @@ Filtering is performed using a large language model (LLM) with a rate limit set 
 Each filter uses a few-shot prompting strategy, defined in `preprocessing/prompt_builder.py`.  
 To run the filtering, use the following command with the appropriate filter name:
 ```bash
-python preprocessing_script.py filter_questions --filter causal_chain --input_path data/sample.csv --output_path data/filtered_causal_chain.csv
+python preprocessing_script.py filter_questions --filter causal_chain --input_path data/unfiltered_sample.csv --output_path data/filtered_01_causal_chain.csv
 ```
 The available filters are:
 - `causal_chain`: Removes all question-answer pairs that do not clearly exhibit a causal chain between the question and the answer.
@@ -65,15 +65,25 @@ The available filters are:
 
 To refine our filtering prompts, we used this command to evaluate the dataset after each step and identify common issues. It displays `nq` random entries from the specified file:
 ```bash
-python preprocessing_script.py sample_lookup --input_path data/sample.csv --nq 100
+python preprocessing_script.py sample_lookup --input_path data/unfiltered_sample.csv --nq 100
 ```
 You can also use the following function to check the number of questions per dataset contained in the given path:
 ```bash
-python preprocessing_script.py sample_stats --input_path data/sample.csv
+python preprocessing_script.py sample_stats --input_path data/unfiltered_sample.csv
 ```
+### Step 4: Create perturbations
+- Beschreibung...
+```bash
+python preprocessing_script.py create_perturbs --input_path data/filtered_03_question.csv --output_path data/final.csv
+```
+- Intensity...
+
 ## LLM Evaluation Instructions
 
 - Python version: 3.10
 - Wie viel SPeicher am ende bendötigt? (venv datei checken)
 - Help cl function für beides scripts erwähnen
 - llm parameter für eval und filter erwähnen -> Am besten verschieden für keinen bias
+- Verfügbae llms und wie 
+- Oben nochmal drüber gucken wegen namen von dateien und durchführung
+- extra parameter erklären

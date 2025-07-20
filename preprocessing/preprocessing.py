@@ -5,7 +5,8 @@ import random
 import logging
 import pandas as pd
 from services.command_line_service import print_progress_bar
-from preprocessing.prompt_builder import build_prompt
+from preprocessing.filter_funcs import build_prompt
+from preprocessing.perturbation_funcs import perturbation_func
 
 class Preprocessing:
     """
@@ -122,6 +123,85 @@ class Preprocessing:
             print(f"{ds}: {count} questions")
         print(f"Total questions: {len(df)}")
 
+    def create_perturbs(self, input_path: str, output_path: str, intensity: int) -> None:
+        """
+        Creates perturbations of questions from the input file with defined intensity and saves them to the output file.
+        The function is robust for long runtimes and can resume if interrupted.
+        Args:
+            input_path (str): Path to the input CSV file with questions.
+            output_path (str): Path to the output file.
+            intensity (int): Intensity of the perturbations.
+        Raises:
+            FileNotFoundError: If the input file does not exist.
+            ValueError: If the file does not have the expected format.
+        """
+        if not os.path.exists(input_path):
+            raise FileNotFoundError(f"File not found: {input_path}")
+        in_df = pd.read_csv(input_path)
+
+        if in_df.empty:
+            print("The input file contains no questions.")
+            return
+
+        if list(in_df.columns) != ["id", "question_processed", "answer_processed", "dataset"]:
+            raise ValueError(f"Input File {input_path} not in expected format.")
+
+        expected_columns = [
+            "id", "question_none_perturb", "question_char_perturb", "question_synonym_perturb",
+            "question_language_perturb", "question_paraphrase_perturb", "question_sentence_inj_perturb",
+            "question_bias_perturb", "answer", "dataset"
+        ]
+
+        # Load output file if it exists, otherwise create a new DataFrame
+        if os.path.exists(output_path):
+            out_df = pd.read_csv(output_path)
+            if list(out_df.columns) != expected_columns:
+                raise ValueError(f"Output File {output_path} not in expected format.")
+        else:
+            out_df = pd.DataFrame()
+            out_df["id"] = in_df["id"].astype(str)
+            out_df["question_none_perturb"] = in_df["question_processed"].astype(str)
+            out_df["question_char_perturb"] = ""
+            out_df["question_synonym_perturb"] = ""
+            out_df["question_language_perturb"] = ""
+            out_df["question_paraphrase_perturb"] = ""
+            out_df["question_sentence_inj_perturb"] = ""
+            out_df["question_bias_perturb"] = ""
+            out_df["answer"] = in_df["answer_processed"].astype(str)
+            out_df["dataset"] = in_df["dataset"].astype(str)
+
+        levels = [
+            "char", "synonym", "language", "paraphrase", "sentence_inj", "bias"
+        ]
+        col_map = {
+            "char": "question_char_perturb",
+            "synonym": "question_synonym_perturb",
+            "language": "question_language_perturb",
+            "paraphrase": "question_paraphrase_perturb",
+            "sentence_inj": "question_sentence_inj_perturb",
+            "bias": "question_bias_perturb"
+        }
+
+        print(f"Starting creating perturbations of {input_path}")
+        total = len(out_df)
+        for idx, row in out_df.iterrows():
+            print_progress_bar(idx, total)
+            for level in levels:
+                col = col_map[level]
+                if pd.isna(row[col]) or row[col] == "":
+                    q = str(row["question_none_perturb"])
+                    try:
+                        perturbed = perturbation_func(q, level, intensity, self.llm_service)
+                    except Exception as e:
+                        logging.error(f"Preprocessing: Error while perturbation of question {row['id']}: {e}\n\n")
+                        perturbed = ""
+                    out_df.at[idx, col] = str(perturbed)
+            # Regularly save progress
+            if idx % 5 == 0:
+                out_df.to_csv(output_path, index=False)
+        print_progress_bar(idx+1, total)
+        out_df.to_csv(output_path, index=False)
+        print("\nPerturbations created and saved to:", output_path)
 
     def filter_questions(self, input_path: str, output_path: str, filter_type: str) -> None:
         """
@@ -166,7 +246,7 @@ class Preprocessing:
             # Skip already processed questions
             if idx < start_idx:
                 continue
-            print_progress_bar(idx + 1, total)
+            print_progress_bar(idx, total)
             q_id = str(getattr(row, "id"))
             dataset = getattr(row, "dataset", None)
             try:
@@ -183,6 +263,7 @@ class Preprocessing:
             if idx % 20 == 0:
                 out_df.to_csv(output_path, index=False)
         out_df.to_csv(output_path, index=False)
+        print_progress_bar(idx+1, total)
         print("\nFiltering finished. Output saved to:", output_path)
         print("Removed questions per dataset:")
         for ds, count in stats.items():

@@ -29,6 +29,12 @@ def main():
         if not args.input_path:
             raise ValueError("input_path must be specified for sample_stats function.")
         Preprocessing.sample_stats(input_path=args.input_path)
+    elif args.function == "create_perturbs":
+        if not args.input_path or not args.llm or not args.output_path:
+            raise ValueError("input_path, output_path and llm must be specified for create_perturbs function.")
+        llm_service = LLMService(llm_name=args.llm)
+        preprocessing = Preprocessing(llm_service=llm_service)
+        preprocessing.create_perturbs(input_path=args.input_path, output_path=args.output_path, intensity=args.intensity)
 
 if __name__ == "__main__":
     main()

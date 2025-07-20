@@ -1,6 +1,4 @@
-import re
 from evaluation.metrics import compute_metric
-from evaluation.perturbation_funcs import perturbation_func
 from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
 from services.command_line_service import print_evaluation_results, print_progress_bar
 from services.llm_service import LLMService
@@ -60,35 +58,34 @@ class Evaluation:
         results = {metric: {perturb: [] for perturb in self.perturbation_levels} for metric in self.metrics}
         num_questions = len(sampled_questions)
 
-
+        print("Starting evaluation.")
         for idx, question in enumerate(sampled_questions, 0):
            print_progress_bar(idx, num_questions)
            try:
-               question_text = question.get('question_processed')
-               answer_text = question.get('answer_processed')
+               question_text = question.get('question_none_perturb')
+               answer_text = question.get('answer')
                if question_text is None or answer_text is None:
                    logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.\n\n")
                    continue
+
+               answer_words_count = len(answer_text.split())
+               reference_preprocessed = preprocessing_func(question_text, self.preprocessing, answer_words_count)
+               reference_inprocessed = inprocessing_func(reference_preprocessed, self.inprocessing, self.llm_service, self.temperature)
+               reference_postprocessed = postprocessing_func(reference_inprocessed, self.postprocessing)
                for perturbation in self.perturbation_levels:
                    #print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
                    try:
-                       answer_words_count = len(re.findall(r'\b\w+\b', answer_text))
-                       prompt1 = perturbation_func(question_text, perturbation)
-                       prompt2 = perturbation_func(question_text, perturbation) + " " # Model can't use caching
-                       prompt1_preprocessed = preprocessing_func(prompt1, self.preprocessing, answer_words_count)
-                       prompt2_preprocessed = preprocessing_func(prompt2, self.preprocessing, answer_words_count)
-                       res1 = inprocessing_func(prompt1_preprocessed, self.inprocessing, self.llm_service, self.temperature)
-                       res2 = inprocessing_func(prompt2_preprocessed, self.inprocessing, self.llm_service, self.temperature)
-                       res1_postprocessed = postprocessing_func(res1, self.postprocessing)
-                       res2_postprocessed = postprocessing_func(res2, self.postprocessing)
-                       #print(f"\nQuestion 1:\n {prompt1}")
-                       #print(f"Response 1:\n {res1_postprocessed}")
-                       #print(f"Question 2:\n {prompt2}")
-                       #print(f"Response 2:\n {res2_postprocessed}")
+                       perturbed_question = question.get(f'question_{perturbation}_perturb') + " " # Model can't use caching
+                       hypothesis_preprocessed = preprocessing_func(perturbed_question, self.preprocessing, answer_words_count)
+                       hypothesis_inprocessed = inprocessing_func(hypothesis_preprocessed, self.inprocessing, self.llm_service, self.temperature)
+                       hypothesis_postprocessed = postprocessing_func(hypothesis_inprocessed, self.postprocessing)
+                       #print(f"\nQuestion:\n {perturbed_question}")
+                       #print(f"Response:\n {hypothesis_postprocessed}")
+                       #print(f"Reference:\n {reference_postprocessed}")
                        #print(f"Ground Truth Answer:\n {answer_text}")
                        for metric in self.metrics:
                            try:
-                               score = compute_metric(res1_postprocessed, res2_postprocessed, answer_text, metric)
+                               score = compute_metric(hypothesis_postprocessed, reference_postprocessed, answer_text, metric)
                                results[metric][perturbation].append(score)
                                #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)

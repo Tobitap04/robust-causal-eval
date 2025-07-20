@@ -7,15 +7,15 @@ from sentence_transformers import SentenceTransformer, util
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str) -> float:
+def compute_metric(hypothesis: str, reference: str, answer: str, metric: str) -> float:
     """
     Computes the specified metric between two predictions and the ground truth answer depending on the metric type.
 
     Args:
-        prediction1 (str): First prediction string.
-        prediction2 (str): Second prediction string.
+        hypothesis: The output produced by the LLM in response to the perturbed question.
+        reference: The result without any perturbations.
         answer (str): Ground truth answer string.
-        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 'sBert_sim', 'sBert_cor', 'nli_sim', 'nli_cor').
+        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 's_bert_sim', 's_bert_cor', 'nli_sim', 'nli_cor').
 
     Returns:
         float: Computed metric score.
@@ -23,29 +23,29 @@ def compute_metric(prediction1: str, prediction2: str, answer: str, metric: str)
         ValueError: If an invalid metric type is specified.
     """
     if metric == "rouge_sim":
-        return rouge(prediction1, prediction2)
+        return rouge(hypothesis, reference)
     elif metric == "rouge_cor":
-        return rouge(prediction1, answer)
+        return rouge(hypothesis, answer)
     elif metric == "bleu_sim":
-        return bleu(prediction1, prediction2)
+        return bleu(hypothesis, reference)
     elif metric == "bleu_cor":
-        return bleu(prediction1, answer)
+        return bleu(hypothesis, answer)
     elif metric == "bert_sim":
-        return bert(prediction1, prediction2)
+        return bert(hypothesis, reference)
     elif metric == "bert_cor":
-        return bert(prediction1, answer)
+        return bert(hypothesis, answer)
     elif metric == "chrf_sim":
-        return chrf(prediction1, prediction2)
+        return chrf(hypothesis, reference)
     elif metric == "chrf_cor":
-        return chrf(prediction1, answer)
-    elif metric == "sBert_sim":
-        return sBert(prediction1, prediction2)
-    elif metric == "sBert_cor":
-        return sBert(prediction1, answer)
+        return chrf(hypothesis, answer)
+    elif metric == "s_bert_sim":
+        return s_bert(hypothesis, reference)
+    elif metric == "s_bert_cor":
+        return s_bert(hypothesis, answer)
     elif metric == "nli_sim":
-        return nli_entailment_score(prediction1, prediction2)
+        return nli_entailment_score(hypothesis, reference)
     elif metric == "nli_cor":
-        return nli_entailment_score(prediction1, answer)
+        return nli_entailment_score(hypothesis, answer)
     else:
         raise ValueError(f"Invalid metric specified: {metric}.")
 
@@ -121,7 +121,7 @@ def chrf(hypothesis: str, reference: str) -> float:
 
 sBert_model = SentenceTransformer("all-mpnet-base-v2")
 
-def sBert(hypothesis: str, reference: str) -> float:
+def s_bert(hypothesis: str, reference: str) -> float:
     """
     Computes the cosine similarity between the embeddings of two texts.
     Args:
