@@ -182,7 +182,7 @@ class Preprocessing:
             "bias": "question_bias_perturb"
         }
 
-        print(f"Starting creating perturbations of {input_path}")
+        print(f"Starting to create perturbations for {input_path}")
         total = len(out_df)
         for idx, row in out_df.iterrows():
             print_progress_bar(idx, total)

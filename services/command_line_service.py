@@ -100,7 +100,7 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
     parser.add_argument("--temp", type=float, default=0,
                         help="Temperature setting for the LLM (default: 0)")
 
-    parser.add_argument("--sample_path", type=str, default="data/unfiltered_sample.csv", help="Path to sample of the  Webis-CausalQA dataset.") # TODO: Change to data/final.csv
+    parser.add_argument("--sample_path", type=str, default="data/unfiltered_sample.csv", help="Path to sample of the  Webis-CausalQA dataset.") # TODO: Change to data/final_sample.csv
 
     parser.add_argument("--datasets", type=str, nargs='+',
                         default=["eli5", "gooaq", "msmarco", "naturalquestions", "squad2"],
