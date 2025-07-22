@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer, util
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-def compute_metric(hypothesis: str, reference: str, answer: str, metric: str) -> float:
+def compute_metric(hypothesis: str, reference: str, answer: str, question: str, metric: str) -> float:
     """
     Computes the specified metric between two predictions and the ground truth answer depending on the metric type.
 
@@ -15,8 +15,8 @@ def compute_metric(hypothesis: str, reference: str, answer: str, metric: str) ->
         hypothesis: The output produced by the LLM in response to the perturbed question.
         reference: The result without any perturbations.
         answer (str): Ground truth answer string.
-        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 's_bert_sim', 's_bert_cor', 'nli_sim', 'nli_cor').
-
+        question (str): The (perturbed) question before any processing.
+        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 's_bert_sim', 's_bert_cor', 'nli_sim', 'nli_cor', 'q_len'. 'ans_len').
     Returns:
         float: Computed metric score.
     Raises:
@@ -46,6 +46,10 @@ def compute_metric(hypothesis: str, reference: str, answer: str, metric: str) ->
         return nli_entailment_score(hypothesis, reference)
     elif metric == "nli_cor":
         return nli_entailment_score(hypothesis, answer)
+    elif metric == "q_len":
+        return len(question.split())
+    elif metric == "ans_len":
+        return len(hypothesis.split())
     else:
         raise ValueError(f"Invalid metric specified: {metric}.")
 

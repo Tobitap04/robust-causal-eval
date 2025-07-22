@@ -36,6 +36,7 @@ class LLMService:
         self.client = openai.OpenAI(
             api_key=self.api_key,
             base_url=self.base_url,
+            timeout=90
         )
 
     @staticmethod
@@ -73,19 +74,25 @@ class LLMService:
             params = {
                 "model": self.llm_name,
                 "messages": messages,
+                "stream": True, # Test
             }
             if max_tokens is not None:
                 params["max_completion_tokens"] = str(max_tokens)
             if temperature is not None:
                 params["temperature"] = str(temperature)
 
-            response = self.client.chat.completions.create(**params)
-            content = response.choices[0].message.content
-            # Remove the <think> tag of reasoning if present
-            if "</think>" in content:
-                return content.split("</think>", 1)[-1].strip()
+            stream = self.client.chat.completions.create(**params)
+
+            collected_content = ""
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    collected_content += delta
+            # Remove the </think> tag of reasoning if present
+            if "</think>" in collected_content:
+                return collected_content.split("</think>", 1)[-1].strip()
             else:
-                return content.strip()
+                return collected_content.strip()
         except Exception as e:
             logging.warning(f"LLMService: Error fetching LLM response: {e}\n\n")
             raise e

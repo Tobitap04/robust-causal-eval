@@ -81,9 +81,9 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                         help="Perturbation levels to test (default: ['none', 'char', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
-                        choices=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor"],
-                        default=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor"],
-                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'chrf_sim', 'chrf_cor','bert_sim', 'bert_cor', 's_bert_sim', 's_bert_corr', 'nli_sim', 'nli_cor'])")
+                        choices=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor", "q_len", "ans_len"],
+                        default=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor", "q_len", "ans_len"],
+                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'chrf_sim', 'chrf_cor','bert_sim', 'bert_cor', 's_bert_sim', 's_bert_corr', 'nli_sim', 'nli_cor', 'q_len', 'ans_len'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none", "word_constraint"],
@@ -118,7 +118,7 @@ def get_cl_args_preproc() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
 
     parser.add_argument("function", type=str, help="Function to execute.", choices=["data_setup", "create_sample", "filter_questions", "sample_lookup", "sample_stats", "create_perturbs"])
-    parser.add_argument("--nq", type=int, help="The number of questions to sample.", default=10000)
+    parser.add_argument("--nq", type=int, help="The number of questions to sample.", default=6000)
     parser.add_argument("--input_path", type=str, help="The path to the input dataset file (should end with .csv).", default=None)
     parser.add_argument("--output_path", type=str, help="The path to the output dataset file (should end with .csv).", default=None)
     parser.add_argument("--filter", type=str, help="The filter to apply to the questions.", choices=["causal_chain", "answer", "question"], default=None)

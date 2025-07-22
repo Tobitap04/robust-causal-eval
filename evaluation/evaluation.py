@@ -77,7 +77,7 @@ class Evaluation:
                    try:
                        perturbed_question = question.get(f'question_{perturbation}_perturb') + " " # Model can't use caching
                        hypothesis_preprocessed = preprocessing_func(perturbed_question, self.preprocessing, answer_words_count)
-                       hypothesis_inprocessed = inprocessing_func(hypothesis_preprocessed, self.inprocessing, self.llm_service, self.temperature)
+                       hypothesis_inprocessed = inprocessing_func(hypothesis_preprocessed, self.inprocessing, self.llm_service, self.temperature) # + 0.000000000001 (worse results)
                        hypothesis_postprocessed = postprocessing_func(hypothesis_inprocessed, self.postprocessing)
                        #print(f"\nQuestion:\n {perturbed_question}")
                        #print(f"Response:\n {hypothesis_postprocessed}")
@@ -85,14 +85,14 @@ class Evaluation:
                        #print(f"Ground Truth Answer:\n {answer_text}")
                        for metric in self.metrics:
                            try:
-                               score = compute_metric(hypothesis_postprocessed, reference_postprocessed, answer_text, metric)
+                               score = compute_metric(hypothesis_postprocessed, reference_postprocessed, answer_text, perturbed_question, metric)
                                results[metric][perturbation].append(score)
                                #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
-                               logging.error(f"Evaluation: Error while computing metric '{metric}': {e}\n\n")
+                               logging.error(f"Evaluation: Error while computing metric {metric} of question {idx}: {e}\n\n")
                    except Exception as e:
-                       logging.error(f"Evaluation: Error during perturbation '{perturbation}': {e}\n\n")
+                       logging.error(f"Evaluation: Error during perturbation {perturbation} of question {idx}: {e}\n\n")
            except Exception as e:
                logging.error(f"Evaluation: Error with question {idx}: {e}\n\n")
         print_progress_bar(num_questions, num_questions)
