@@ -1,9 +1,8 @@
+from openai import OpenAI
 from tenacity import retry, wait_exponential, stop_after_attempt
 from ratelimit import limits, RateLimitException
 from dotenv import load_dotenv
-import requests
 import logging
-import openai
 import time
 import os
 
@@ -22,20 +21,16 @@ class LLMService:
         """
         # Fetch API key and base url from environment variables
         load_dotenv("config.env")
-        self.api_key = os.getenv("LLM_API_KEY")
-        if self.api_key is None:
+        api_key = os.getenv("LLM_API_KEY")
+        if api_key is None:
             raise ValueError("LLM_API_KEY is not set")
-        self.base_url = os.getenv("LLM_BASE_URL")
-        if self.base_url is None:
+        base_url = os.getenv("LLM_BASE_URL")
+        if base_url is None:
             raise ValueError("LLM_BASE_URL is not set")
-
-        # Check if the provided LLM name is available
-        if self.base_url == "https://ai-gateway.uni-paderborn.de" and llm_name not in self.get_available_models():
-            raise ValueError(f"LLM model '{llm_name}' is not available. Available models: {self.get_available_models()}. Please check the model name.")
         self.llm_name = llm_name
-        self.client = openai.OpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url,
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
             timeout=90
         )
 
@@ -56,62 +51,37 @@ class LLMService:
     )
 
     @limits(calls=RPM, period=60)
-    def get_llm_response(self, prompt: str, temperature: float = 1, max_tokens: int = None) -> str:
+    def get_llm_response(self, prompt: str, temperature: float = 1) -> str:
         """
         Fetches a response from the LLM based on the provided prompt.
         Should always be covered in try-except block to handle exceptions.
         Args:
             prompt (str): The input prompt for the LLM.
             temperature (float, optional): Sampling temperature for the response. Defaults to None.
-            max_tokens (int, optional): Maximum number of tokens in the response. Defaults to None.
+        Returns:
+            str: The response from the LLM, with any </think> tags removed.
         Raises:
             RetryError: If the request fails after retries.
         """
         try:
-            messages = [
-                {"role": "user", "content": prompt}
-            ]
-            params = {
-                "model": self.llm_name,
-                "messages": messages,
-                "stream": True, # Test
-            }
-            if max_tokens is not None:
-                params["max_completion_tokens"] = str(max_tokens)
-            if temperature is not None:
-                params["temperature"] = str(temperature)
-
-            stream = self.client.chat.completions.create(**params)
-
-            collected_content = ""
+            stream = self.client.chat.completions.create(
+                model=self.llm_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                stream=True
+            )
+            response = ""
             for chunk in stream:
                 delta = chunk.choices[0].delta.content
-                if delta:
-                    collected_content += delta
+                if delta is not None:
+                    response += delta
+            
             # Remove the </think> tag of reasoning if present
-            if "</think>" in collected_content:
-                return collected_content.split("</think>", 1)[-1].strip()
+            if "</think>" in response:
+                return response.split("</think>", 1)[-1].strip()
             else:
-                return collected_content.strip()
+                return response.strip()
+
         except Exception as e:
             logging.warning(f"LLMService: Error fetching LLM response: {e}\n\n")
             raise e
-
-    def get_available_models(self) -> list | None:
-        """
-        Fetches list of available models from the LLM service.
-        Returns:
-            list: A list of available model IDs.
-        Raises:
-            RuntimeError: If the request to fetch models fails.
-        """
-        url = self.base_url + "/v1/models"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}"
-        }
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            models_data = response.json().get("data", [])
-            return [model["id"] for model in models_data]
-        else:
-            raise RuntimeError(f"Error fetching available models: {response.status_code} {response.text}")

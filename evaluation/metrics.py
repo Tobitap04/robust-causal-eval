@@ -2,10 +2,12 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from bert_score import score as bert_score
 from nltk import PorterStemmer
 from rouge import Rouge
+import torch
 from sacrebleu.metrics import CHRF
 from sentence_transformers import SentenceTransformer, util
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, logging
+logging.set_verbosity_error()
+
 
 def compute_metric(hypothesis: str, reference: str, answer: str, question: str, metric: str) -> float:
     """

@@ -65,7 +65,8 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
     """
     Parses command line arguments for evaluating LLM robustness on causal questions.
-    Returns: argparse.Namespace: Parsed command line arguments.
+    Returns:
+        argparse.Namespace: Parsed command line arguments.
     """
     parser = argparse.ArgumentParser(description="Evaluate LLM robustness on causal questions.")
 
@@ -113,7 +114,8 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
 def get_cl_args_preproc() -> argparse.Namespace:
     """
     Parses command line arguments for preprocessing question dataset.
-    Returns: argparse.Namespace: Parsed command line arguments.
+    Returns:
+        argparse.Namespace: Parsed command line arguments.
     """
     parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
 

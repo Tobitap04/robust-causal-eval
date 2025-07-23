@@ -1,6 +1,5 @@
-requests~=2.32.4
 openai~=1.82.0
-tenacity~=9.1.2
+tenacity~=8.5.0
 ratelimit~=2.2.1
 django-ratelimit2~=0.4.2
 python-dotenv~=1.1.0
