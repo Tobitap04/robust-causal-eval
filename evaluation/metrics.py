@@ -159,13 +159,13 @@ def nli_entailment_score(hypothesis: str, reference: str) -> float:
     with torch.no_grad():
         logits1 = nli_model(**inputs1).logits
     probs1 = torch.softmax(logits1, dim=-1).squeeze()
-    score1 = probs1[2].item()
+    score1 = 1 - probs1[0].item()
 
     # Direction 2: reference -> hypothesis
     inputs2 = nli_tokenizer(reference, hypothesis, return_tensors="pt", truncation=True)
     with torch.no_grad():
         logits2 = nli_model(**inputs2).logits
     probs2 = torch.softmax(logits2, dim=-1).squeeze()
-    score2 = probs2[2].item()
+    score2 = 1 - probs2[0].item()
 
     return (score1 + score2) / 2
