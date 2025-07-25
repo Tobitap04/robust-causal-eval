@@ -62,6 +62,64 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 
     print("-" * (18 * len(headers)))
 
+
+def print_evaluation_results_latex(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
+                             temperature: float, perturbation_levels: list[str],
+                             metrics: list[str], avg_results: dict, datasets: list[str]) -> None:
+    """
+    Prints the results of the causal robustness evaluation in LaTeX format for inclusion in a report.
+    Args:
+        llm_name (str): Name of the LLM used for evaluation.
+        num_questions (int): Number of questions evaluated.
+        preprocessing (str): Preprocessing method applied to the questions.
+        inprocessing (str): Inprocessing method applied during question handling.
+        postprocessing (str): Postprocessing method applied to the responses.
+        temperature (float): Temperature setting used for the LLM.
+        perturbation_levels (list[str]): List of perturbation levels tested.
+        metrics (list[str]): List of metrics computed during evaluation.
+        avg_results (dict): Dictionary containing average results for each metric and perturbation level.
+        datasets (list[str]): List of datasets included in the evaluation.
+    """
+    print()
+    print("\\section*{Causal Robustness Evaluation}")
+    print("\\textbf{Input Parameters}")
+    print("\\begin{itemize}")
+    print(f"  \\item LLM: \\texttt{{{llm_name}}}")
+    print(f"  \\item Datasets: \\texttt{{{', '.join(datasets)}}}")
+    print(f"  \\item Number of Questions: \\texttt{{{num_questions}}}")
+    print(f"  \\item Preprocessing: \\texttt{{{preprocessing}}}")
+    print(f"  \\item Inprocessing: \\texttt{{{inprocessing}}}")
+    print(f"  \\item Postprocessing: \\texttt{{{postprocessing}}}")
+    print(f"  \\item Temperature: \\texttt{{{temperature}}}")
+    print("\\end{itemize}")
+
+    print("\\vspace{1em}")
+    print("\\textbf{Evaluation Results}")
+    cols = "l" + "c" * len(perturbation_levels) + "c"
+    print(f"\\begin{{tabular}}{{|{cols}|}}")
+    print("\\hline")
+
+    # Header
+    headers = ["Category"] + [str(p) for p in perturbation_levels] + ["Avg"]
+    print(" & ".join(headers) + " \\\\ \\hline")
+
+    # Rows
+    for metric in metrics:
+        row = [metric]
+        vals = []
+        for perturb in perturbation_levels:
+            val = avg_results[metric][perturb]
+            if val is not None:
+                vals.append(val)
+                row.append(f"{val:.4f}")
+            else:
+                row.append("N/A")
+        avg = sum(vals) / len(vals) if vals else 0
+        row.append(f"{avg:.4f}")
+        print(" & ".join(row) + " \\\\ \\hline")
+
+    print("\\end{tabular}")
+
 def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
     """
     Parses command line arguments for evaluating LLM robustness on causal questions.
@@ -102,6 +160,9 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                         help="Temperature setting for the LLM (default: 0)")
 
     parser.add_argument("--sample_path", type=str, default="data/unfiltered_sample.csv", help="Path to sample of the  Webis-CausalQA dataset.") # TODO: Change to data/final_sample.csv
+
+    parser.add_argument("--latex", type=bool, default=False,
+                        help="If true, prints results in LaTeX format for inclusion in a report (default: False)")
 
     parser.add_argument("--datasets", type=str, nargs='+',
                         default=["eli5", "gooaq", "msmarco", "naturalquestions", "squad2"],

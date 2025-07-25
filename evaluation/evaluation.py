@@ -1,6 +1,6 @@
 from evaluation.metrics import compute_metric
 from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
-from services.command_line_service import print_evaluation_results, print_progress_bar
+from services.command_line_service import print_evaluation_results, print_progress_bar, print_evaluation_results_latex
 from services.llm_service import LLMService
 import pandas as pd
 import logging
@@ -9,7 +9,7 @@ class Evaluation:
 
     def __init__(self, llm_service: LLMService, llm: str, nq: int,
                  perturbs: list[str], metrics: list[str],
-                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str, datasets: list[str]) -> None:
+                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str, datasets: list[str], latex: bool) -> None:
         """
         Initializes the Evaluation class with the LLM service and evaluation parameters.
         Args:
@@ -24,6 +24,7 @@ class Evaluation:
             temp (float): Temperature to use.
             sample_path (str): Path to sample of the  Webis-CausalQA dataset.
             datasets (list[str]): Datasets to include in the evaluation.
+            latex (bool): Whether to format the output for LaTeX.
         """
         self.llm_service = llm_service
         self.llm_name = llm # Format checked in llm_service.py
@@ -40,6 +41,7 @@ class Evaluation:
         self.temperature = temp
         self.sample_path = sample_path # Checked in run()
         self.datasets = datasets  # Format checked in get_cl_args()
+        self.latex = latex
 
     def run(self) -> None:
         """
@@ -102,5 +104,16 @@ class Evaluation:
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}
 
-        print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions, temperature=self.temperature, preprocessing=self.preprocessing, inprocessing=self.inprocessing, postprocessing=self.postprocessing, metrics=self.metrics, avg_results=avg_results, perturbation_levels=self.perturbation_levels, datasets=self.datasets)
+        if self.latex:
+            print_evaluation_results_latex(llm_name=self.llm_name, num_questions=self.num_questions,
+                                     temperature=self.temperature, preprocessing=self.preprocessing,
+                                     inprocessing=self.inprocessing, postprocessing=self.postprocessing,
+                                     metrics=self.metrics, avg_results=avg_results,
+                                     perturbation_levels=self.perturbation_levels, datasets=self.datasets)
+        else:
+            print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions,
+                                     temperature=self.temperature, preprocessing=self.preprocessing,
+                                     inprocessing=self.inprocessing, postprocessing=self.postprocessing,
+                                     metrics=self.metrics, avg_results=avg_results,
+                                     perturbation_levels=self.perturbation_levels, datasets=self.datasets)
 

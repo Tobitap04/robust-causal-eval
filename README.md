@@ -84,6 +84,6 @@ python preprocessing_script.py create_perturbs --input_path data/filtered_03_que
 
 ## LLM Evaluation Instructions
 
-
+- latex param
 - Help cl function für beides scripts erwähnen
 - extra parameter erklären
