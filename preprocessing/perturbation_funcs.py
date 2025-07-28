@@ -33,7 +33,7 @@ def perturbation_func(question: str, level: str, intensity: int, llm_service: LL
     else:
         raise ValueError(f"Invalid perturbation type specified: {level}.")
 
-# TODO: Set default intensity
+
 def char_level(question: str, intensity: int) -> str:
     """
     Character-level perturbation function.
@@ -43,6 +43,7 @@ def char_level(question: str, intensity: int) -> str:
     Returns:
         str: The perturbed question with character-level changes.
     """
+    if intensity is None: intensity = 100 # Default intensity if not specified
 
     typo_methods = [
         "char_swap",
@@ -158,6 +159,7 @@ def synonym_level(question: str, intensity: int, llm_service: LLMService) -> str
     Returns:
         str: The perturbed question with synonym-level changes.
     """
+    if intensity is None: intensity = 75 # Default intensity if not specified
     word_count = len(question.split())
     num_words = max(1, int((word_count * intensity) / 100))
     remaining_words = min(word_count - 1, word_count - num_words)
@@ -183,6 +185,7 @@ def language_level(question: str, intensity: int, llm_service: LLMService) -> st
     Returns:
         str: The perturbed question with language-level changes.
     """
+    if intensity is None: intensity = 50 # Default intensity if not specified
     languages = ["German", "French", "Spanish", "Italian", "Portuguese"]
     word_count = len(question.split())
     num_words = max(1, int((word_count * intensity) / 100))
@@ -210,6 +213,7 @@ def paraphrase_level(question: str, intensity: int, llm_service: LLMService) -> 
     Returns:
         str: The paraphrased question.
     """
+    if intensity is None: intensity = 75 # Default intensity if not specified
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
@@ -231,6 +235,7 @@ def sentence_injection_level(question: str, intensity: int, llm_service: LLMServ
     Returns:
         str: The question after injecting additional a sentence and/or phrase as perturbations.
     """
+    if intensity is None: intensity = 75  # Default intensity if not specified
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
@@ -252,6 +257,7 @@ def bias_level(question: str, intensity: int, llm_service: LLMService) -> str:
     Returns:
         str: The biased question.
     """
+    if intensity is None: intensity = 50  # Default intensity if not specified
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
