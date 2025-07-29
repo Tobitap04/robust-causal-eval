@@ -12,7 +12,7 @@ def print_progress_bar(current: int, total: int, bar_length: int = 40) -> None:
     percent = float(current) / total
     arrow = '-' * max(0, int(round(percent * bar_length) - 1)) + '>'
     spaces = ' ' * (bar_length - len(arrow))
-    sys.stdout.write(f'Progress: [{arrow}{spaces}] {current}/{total}')
+    sys.stdout.write(f'\rProgress: [{arrow}{spaces}] {current}/{total}')
     sys.stdout.flush()
 
 def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
