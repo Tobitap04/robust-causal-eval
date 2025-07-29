@@ -108,7 +108,7 @@ def bert(hypothesis: str, reference: str) -> float:
     Returns:
         float: BERT score F1.
     """
-    P, R, F1 = bert_score([hypothesis], [reference], lang="en", rescale_with_baseline=True)
+    P, R, F1 = bert_score([hypothesis], [reference], model_type='bert-base-uncased', lang='en')
     return F1[0].item()
 
 
