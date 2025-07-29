@@ -1,9 +1,8 @@
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from nltk.translate.chrf_score import sentence_chrf
 from bert_score import score as bert_score
-from nltk import PorterStemmer
-from rouge import Rouge
+from rouge_score import rouge_scorer
 import torch
-from sacrebleu.metrics import CHRF
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, logging
 logging.set_verbosity_error()
@@ -56,6 +55,7 @@ def compute_metric(hypothesis: str, reference: str, answer: str, question: str, 
         raise ValueError(f"Invalid metric specified: {metric}.")
 
 
+rouge_scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
 def rouge(hypothesis: str, reference: str) -> float:
     """
     Computes the ROUGE-L F1 score between a hypothesis and a reference answer.
@@ -67,19 +67,11 @@ def rouge(hypothesis: str, reference: str) -> float:
     Returns:
         float: ROUGE-L F1 score.
     """
-    # Apply stemming for robuster evaluation
-    stemmer = PorterStemmer()
-    stem = lambda text: " ".join(stemmer.stem(word) for word in text.split())
-
-    hypo_stemmed = stem(hypothesis)
-    ref_stemmed = stem(reference)
-
-    rouge_scorer = Rouge()
-    score = rouge_scorer.get_scores(hypo_stemmed, ref_stemmed, avg=True)
-
-    return score['rouge-l']['f']
+    score = rouge_scorer.score(reference, hypothesis)
+    return score['rougeL'].fmeasure
 
 
+smoothing_fn = SmoothingFunction()
 def bleu(hypothesis: str, reference: str) -> float:
     """
     Computes the BLEU score between a hypothesis and a reference answer.
@@ -93,8 +85,7 @@ def bleu(hypothesis: str, reference: str) -> float:
     """
     reference_tokens = [reference.split()]
     hypothesis_tokens = hypothesis.split()
-    smoothing_fn = SmoothingFunction().method2 # Smoothing function to handle short sentences
-    return sentence_bleu(reference_tokens, hypothesis_tokens, smoothing_function=smoothing_fn)
+    return sentence_bleu(reference_tokens, hypothesis_tokens, smoothing_function=smoothing_fn.method3)
 
 
 def bert(hypothesis: str, reference: str) -> float:
@@ -121,12 +112,10 @@ def chrf(hypothesis: str, reference: str) -> float:
     Returns:
         float: CHRF score normalized to [0, 1].
     """
-    chrf_metric = CHRF()
-    return chrf_metric.sentence_score(hypothesis, [reference]).score / 100
+    return sentence_chrf(reference, hypothesis)
 
 
 sBert_model = SentenceTransformer("all-mpnet-base-v2")
-
 def s_bert(hypothesis: str, reference: str) -> float:
     """
     Computes the cosine similarity between the embeddings of two texts.
