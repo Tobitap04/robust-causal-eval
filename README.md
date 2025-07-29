@@ -87,3 +87,4 @@ python preprocessing_script.py create_perturbs --input_path data/filtered_03_que
 - latex param
 - Help cl function für beides scripts erwähnen
 - extra parameter erklären
+- All models useable that support openai api

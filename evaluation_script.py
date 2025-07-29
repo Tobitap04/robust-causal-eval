@@ -13,5 +13,4 @@ def main():
     evaluation.run()
 
 if __name__ == "__main__":
-   main()
-
+    main()

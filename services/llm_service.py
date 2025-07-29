@@ -68,7 +68,8 @@ class LLMService:
                 model=self.llm_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
-                stream=True
+                stream=True,
+                **({"extra_body": {"cache": {"no-cache": True}}} if "gwdg" in self.llm_name else {}) # No caching for gwdg models
             )
             response = ""
             for chunk in stream:

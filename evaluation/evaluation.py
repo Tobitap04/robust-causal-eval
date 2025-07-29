@@ -78,8 +78,6 @@ class Evaluation:
                    #print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
                    try:
                        perturbed_question = question.get(f'question_{perturbation}_perturb')
-                       if "gemini" not in self.llm_name.lower():
-                           perturbed_question += " " # Workaround so that model can't use caching
                        hypothesis_preprocessed = preprocessing_func(perturbed_question, self.preprocessing, answer_words_count)
                        hypothesis_inprocessed = inprocessing_func(hypothesis_preprocessed, self.inprocessing, self.llm_service, self.temperature) # + 0.000000000001 (worse results)
                        hypothesis_postprocessed = postprocessing_func(hypothesis_inprocessed, self.postprocessing)
