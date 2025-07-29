@@ -10,9 +10,9 @@ def print_progress_bar(current: int, total: int, bar_length: int = 40) -> None:
         bar_length (int, optional): Length of the progress bar. Default is 40.
     """
     percent = float(current) / total
-    arrow = '-' * int(round(percent * bar_length) - 1) + '>'
+    arrow = '-' * max(0, int(round(percent * bar_length) - 1)) + '>'
     spaces = ' ' * (bar_length - len(arrow))
-    sys.stdout.write(f'\rProgress: [{arrow}{spaces}] {current}/{total}')
+    sys.stdout.write(f'Progress: [{arrow}{spaces}] {current}/{total}')
     sys.stdout.flush()
 
 def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
@@ -47,7 +47,7 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 
     print("Evaluation Results")
     print("=" * 30)
-    headers = ["Category"] + [str(p) for p in perturbation_levels]
+    headers = ["Metric"] + [str(p) for p in perturbation_levels]
     header_row = " | ".join([f"{h:<13}" for h in headers])
     print(header_row)
     print("-" * (18 * len(headers)))
@@ -63,11 +63,11 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
     print("-" * (18 * len(headers)))
 
 
-def print_evaluation_results_latex(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
+def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
                              temperature: float, perturbation_levels: list[str],
                              metrics: list[str], avg_results: dict, datasets: list[str]) -> None:
     """
-    Prints the results of the causal robustness evaluation in LaTeX format for inclusion in a report.
+    Saves the results of the causal robustness evaluation in LaTeX format for inclusion in a report.
     Args:
         llm_name (str): Name of the LLM used for evaluation.
         num_questions (int): Number of questions evaluated.
@@ -80,45 +80,82 @@ def print_evaluation_results_latex(llm_name: str, num_questions: int, preprocess
         avg_results (dict): Dictionary containing average results for each metric and perturbation level.
         datasets (list[str]): List of datasets included in the evaluation.
     """
-    print()
-    print("\\section*{Causal Robustness Evaluation}")
-    print("\\textbf{Input Parameters}")
-    print("\\begin{itemize}")
-    print(f"  \\item LLM: \\texttt{{{llm_name}}}")
-    print(f"  \\item Datasets: \\texttt{{{', '.join(datasets)}}}")
-    print(f"  \\item Number of Questions: \\texttt{{{num_questions}}}")
-    print(f"  \\item Preprocessing: \\texttt{{{preprocessing}}}")
-    print(f"  \\item Inprocessing: \\texttt{{{inprocessing}}}")
-    print(f"  \\item Postprocessing: \\texttt{{{postprocessing}}}")
-    print(f"  \\item Temperature: \\texttt{{{temperature}}}")
-    print("\\end{itemize}")
+    # Automatically detect metric groups based on suffix
+    similarity_metrics = [m for m in avg_results if m.endswith("_sim")]
+    correctness_metrics = [m for m in avg_results if m.endswith("_cor")]
+    structure_metrics = [m for m in avg_results if m not in similarity_metrics + correctness_metrics]
 
-    print("\\vspace{1em}")
-    print("\\textbf{Evaluation Results}")
-    cols = "l" + "c" * len(perturbation_levels) + "c"
-    print(f"\\begin{{tabular}}{{|{cols}|}}")
-    print("\\hline")
+    metric_categories = {
+        "Similarity": similarity_metrics,
+        "Correctness": correctness_metrics,
+        "Structure": structure_metrics
+    }
 
-    # Header
-    headers = ["Category"] + [str(p) for p in perturbation_levels] + ["Avg"]
-    print(" & ".join(headers) + " \\\\ \\hline")
+    # Formatting helper functions
+    def clean_name_for_display(metric_name):
+        name = metric_name.replace("_", "-")
+        if name.endswith("-sim") or name.endswith("-cor"):
+            return name[:-4]  # remove suffix
+        return name
 
-    # Rows
-    for metric in metrics:
-        row = [metric]
-        vals = []
-        for perturb in perturbation_levels:
-            val = avg_results[metric][perturb]
-            if val is not None:
-                vals.append(val)
-                row.append(f"{val:.4f}")
-            else:
-                row.append("N/A")
-        avg = sum(vals) / len(vals) if vals else 0
-        row.append(f"{avg:.4f}")
-        print(" & ".join(row) + " \\\\ \\hline")
+    def clean_name(p):
+        return p.replace("_", "-")
 
-    print("\\end{tabular}")
+    # Open file for appending (creates the file if it doesn't exist)
+    with open("results.tex", "a", encoding="utf-8") as f:
+        f.write("\\begin{table}[htb]\n")
+        f.write("\\label{table}\n")
+        f.write("\\centering\n")
+        f.write("\\scriptsize\n")
+
+        # Column format: one left column, then c...c for perturbations, then avg column
+        f.write("\\begin{tabular}{l|" + "c" * len(perturbation_levels) + "|c}\n")
+        f.write("\\toprule\n")
+
+        # Table header
+        header = ["\\textbf{Metric}"] + [f"\\textbf{{{clean_name(p)}}}" for p in perturbation_levels] + [
+            "\\textbf{avg.}"]
+        f.write(" & ".join(header) + " \\\\\n")
+        f.write("\\midrule\n")
+
+        # Rows for each category
+        for category, metrics_in_cat in metric_categories.items():
+            f.write(f"\\textbf{{{category}}}" + " & " * (len(perturbation_levels) + 1) + "\\\\\n")
+            for metric in metrics_in_cat:
+                row = [clean_name_for_display(metric)]
+                vals = []
+                for perturb in perturbation_levels:
+                    val = avg_results.get(metric, {}).get(perturb, None)
+                    if val is not None:
+                        vals.append(val)
+                        row.append(f"{val:.4f}")
+                    else:
+                        row.append("N/A")
+                avg = sum(vals) / len(vals) if vals else 0.0
+                row.append(f"({avg:.4f})")
+                f.write(" & ".join(row) + " \\\\\n")
+            if category != "Structure":
+                f.write("\\midrule\n")
+
+        # End of table body
+        f.write("\\bottomrule\n")
+        f.write("\\end{tabular}\n")
+        f.write("\\vspace{0.75em}\n")
+
+        # Create caption
+        caption = (
+            f"LLM={llm_name}; "
+            f"Datasets={'all' if set(datasets) == {'eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'} else ', '.join(datasets)}; "
+            f"NQ={num_questions}; "
+            f"Pre={clean_name(preprocessing)}; "
+            f"In={clean_name(inprocessing)}; "
+            f"Post={clean_name(postprocessing)}; "
+            f"Temp={temperature}"
+        )
+        f.write(f"\\caption{{{caption}}}\n")
+        f.write("\\end{table}\n\n")  # add spacing between tables
+    print("Results saved to results.tex")
+
 
 def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
     """
@@ -140,9 +177,15 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                         help="Perturbation levels to test (default: ['none', 'char', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
-                        choices=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor", "q_len", "ans_len"],
-                        default=["rouge_sim", "rouge_cor", "bleu_sim", "bleu_cor", "chrf_sim", "chrf_cor", "bert_sim", "bert_cor", "s_bert_sim", "s_bert_cor", "nli_sim", "nli_cor", "q_len", "ans_len"],
-                        help="Evaluation metrics to compute (default: ['rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'chrf_sim', 'chrf_cor','bert_sim', 'bert_cor', 's_bert_sim', 's_bert_corr', 'nli_sim', 'nli_cor', 'q_len', 'ans_len'])")
+                        choices=["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim",
+                                 "rouge_cor", "bleu_cor", "chrf_cor", "bert_cor", "s_bert_cor", "nli_cor",
+                                 "q_len", "ans_len"],
+                        default=["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim",
+                                 "rouge_cor", "bleu_cor", "chrf_cor", "bert_cor", "s_bert_cor", "nli_cor",
+                                 "q_len", "ans_len"],
+                        help="Evaluation metrics to compute (default: ['rouge_sim', 'bleu_sim', 'chrf_sim',"
+                             " 'bert_sim', 's_bert_sim', 'nli_sim', 'rouge_cor', 'bleu_cor', 'chrf_cor', 'bert_cor',"
+                             " 's_bert_cor', 'nli_cor', 'q_len', 'ans_len'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none", "word_constraint"],
@@ -179,7 +222,6 @@ def get_cl_args_preproc() -> argparse.Namespace:
         argparse.Namespace: Parsed command line arguments.
     """
     parser = argparse.ArgumentParser(description="Preprocess question datasets to collect causal questions.")
-
     parser.add_argument("function", type=str, help="Function to execute.", choices=["data_setup", "create_sample", "filter_questions", "sample_lookup", "sample_stats", "create_perturbs"])
     parser.add_argument("--nq", type=int, help="The number of questions to sample.", default=6000)
     parser.add_argument("--input_path", type=str, help="The path to the input dataset file (should end with .csv).", default=None)
@@ -191,5 +233,4 @@ def get_cl_args_preproc() -> argparse.Namespace:
     parser.add_argument("--intensity", type=int, help="The intensity of the perturbation. If not set, a custom intensity value is used for each perturbation.", default=None)
     parser.add_argument("--llm", type=str, default="gwdg.qwen2.5-72b-instruct",
                         help="Name of the LLM to evaluate (default: 'gwdg.qwen2.5-72b-instruct')")
-
     return parser.parse_args()

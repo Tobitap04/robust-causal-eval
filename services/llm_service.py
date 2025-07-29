@@ -49,7 +49,6 @@ class LLMService:
        stop=stop_after_attempt(7),
        before_sleep=handle_rate_limit,
     )
-
     @limits(calls=RPM, period=60)
     def get_llm_response(self, prompt: str, temperature: float = 1) -> str:
         """
@@ -84,5 +83,6 @@ class LLMService:
                 return response.strip()
 
         except Exception as e:
-            logging.warning(f"LLMService: Error fetching LLM response: {e}\n\n")
+            print()
+            logging.warning(f"LLMService: Error fetching LLM response: {e}")
             raise e

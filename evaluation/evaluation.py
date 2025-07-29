@@ -1,6 +1,6 @@
 from evaluation.metrics import compute_metric
 from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
-from services.command_line_service import print_evaluation_results, print_progress_bar, print_evaluation_results_latex
+from services.command_line_service import print_evaluation_results, print_progress_bar, save_evaluation_results_latex
 from services.llm_service import LLMService
 import pandas as pd
 import logging
@@ -67,7 +67,8 @@ class Evaluation:
                question_text = question.get('question_none_perturb')
                answer_text = question.get('answer')
                if question_text is None or answer_text is None:
-                   logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.\n\n")
+                   print()
+                   logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.")
                    continue
 
                answer_words_count = len(answer_text.split())
@@ -92,24 +93,26 @@ class Evaluation:
                                #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)
                            except Exception as e:
-                               logging.error(f"Evaluation: Error while computing metric {metric} of question {idx}: {e}\n\n")
+                               print()
+                               logging.error(f"Evaluation: Error while computing metric {metric} of question {idx}: {e}")
                    except Exception as e:
-                       logging.error(f"Evaluation: Error during perturbation {perturbation} of question {idx}: {e}\n\n")
+                       print()
+                       logging.error(f"Evaluation: Error during perturbation {perturbation} of question {idx}: {e}")
            except Exception as e:
-               logging.error(f"Evaluation: Error with question {idx}: {e}\n\n")
+               print()
+               logging.error(f"Evaluation: Error with question {idx}: {e}")
         print_progress_bar(num_questions, num_questions)
         avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}
+        print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions,
+                                 temperature=self.temperature, preprocessing=self.preprocessing,
+                                 inprocessing=self.inprocessing, postprocessing=self.postprocessing,
+                                 metrics=self.metrics, avg_results=avg_results,
+                                 perturbation_levels=self.perturbation_levels, datasets=self.datasets)
 
         if self.latex:
-            print_evaluation_results_latex(llm_name=self.llm_name, num_questions=self.num_questions,
-                                     temperature=self.temperature, preprocessing=self.preprocessing,
-                                     inprocessing=self.inprocessing, postprocessing=self.postprocessing,
-                                     metrics=self.metrics, avg_results=avg_results,
-                                     perturbation_levels=self.perturbation_levels, datasets=self.datasets)
-        else:
-            print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions,
+            save_evaluation_results_latex(llm_name=self.llm_name, num_questions=self.num_questions,
                                      temperature=self.temperature, preprocessing=self.preprocessing,
                                      inprocessing=self.inprocessing, postprocessing=self.postprocessing,
                                      metrics=self.metrics, avg_results=avg_results,
