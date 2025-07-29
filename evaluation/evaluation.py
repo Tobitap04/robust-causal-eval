@@ -105,16 +105,17 @@ class Evaluation:
         avg_results = {metric: {perturb: (sum(scores) / len(scores) if scores else None)
                                 for perturb, scores in perturbs.items()}
                        for metric, perturbs in results.items()}
+        self.sample_path = self.sample_path.split("/")[-1].removesuffix(".csv")
         print_evaluation_results(llm_name=self.llm_name, num_questions=self.num_questions,
                                  temperature=self.temperature, preprocessing=self.preprocessing,
                                  inprocessing=self.inprocessing, postprocessing=self.postprocessing,
                                  metrics=self.metrics, avg_results=avg_results,
-                                 perturbation_levels=self.perturbation_levels, datasets=self.datasets)
+                                 perturbation_levels=self.perturbation_levels, datasets=self.datasets, sample_path=self.sample_path)
 
         if self.latex:
             save_evaluation_results_latex(llm_name=self.llm_name, num_questions=self.num_questions,
                                      temperature=self.temperature, preprocessing=self.preprocessing,
                                      inprocessing=self.inprocessing, postprocessing=self.postprocessing,
                                      metrics=self.metrics, avg_results=avg_results,
-                                     perturbation_levels=self.perturbation_levels, datasets=self.datasets)
+                                     perturbation_levels=self.perturbation_levels, datasets=self.datasets, sample_path=self.sample_path)
 

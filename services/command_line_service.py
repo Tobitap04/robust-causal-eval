@@ -17,7 +17,7 @@ def print_progress_bar(current: int, total: int, bar_length: int = 40) -> None:
 
 def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
                              temperature: float, perturbation_levels: list[str],
-                             metrics: list[str], avg_results: dict, datasets: list[str]) -> None:
+                             metrics: list[str], avg_results: dict, datasets: list[str], sample_path: str) -> None:
     """
     Prints the results of the causal robustness evaluation in a formatted table.
     Args:
@@ -31,12 +31,14 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
         metrics (list[str]): List of metrics computed during evaluation.
         avg_results (dict): Dictionary containing average results for each metric and perturbation level.
         datasets (list[str]): List of datasets included in the evaluation.
+        sample_path (str): Path to the sample.
     """
 
     print("\n\nCausal Robustness Evaluation")
     print("=" * 30)
     print("Input Parameters:")
     print(f"  - LLM:                  {llm_name}")
+    print(f"  - Sample:               {sample_path}")
     print(f"  - Datasets:             {', '.join(datasets)}")
     print(f"  - Number of Questions:  {num_questions}")
     print(f"  - Preprocessing:        {preprocessing}")
@@ -65,7 +67,7 @@ def print_evaluation_results(llm_name: str, num_questions: int, preprocessing: s
 
 def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessing: str, inprocessing: str, postprocessing: str,
                              temperature: float, perturbation_levels: list[str],
-                             metrics: list[str], avg_results: dict, datasets: list[str]) -> None:
+                             metrics: list[str], avg_results: dict, datasets: list[str], sample_path: str) -> None:
     """
     Saves the results of the causal robustness evaluation in LaTeX format for inclusion in a report.
     Args:
@@ -79,6 +81,7 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
         metrics (list[str]): List of metrics computed during evaluation.
         avg_results (dict): Dictionary containing average results for each metric and perturbation level.
         datasets (list[str]): List of datasets included in the evaluation.
+        sample_path (str): Path to the sample.
     """
     # Automatically detect metric groups based on suffix
     similarity_metrics = [m for m in avg_results if m.endswith("_sim")]
@@ -145,6 +148,7 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
         # Create caption
         caption = (
             f"LLM={llm_name}; "
+            f"Sample={sample_path}; "
             f"Datasets={'all' if set(datasets) == {'eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'} else ', '.join(datasets)}; "
             f"NQ={num_questions}; "
             f"Pre={clean_name(preprocessing)}; "
