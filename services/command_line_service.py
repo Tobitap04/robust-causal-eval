@@ -147,8 +147,8 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
 
         # Create caption
         caption = (
-            f"LLM={llm_name}; "
-            f"Sample={sample_path}; "
+            f"LLM={clean_name(llm_name)}; "
+            f"Sample={clean_name(sample_path)}; "
             f"Datasets={'all' if set(datasets) == {'eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'} else ', '.join(datasets)}; "
             f"NQ={num_questions}; "
             f"Pre={clean_name(preprocessing)}; "
