@@ -59,7 +59,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
 
     # Postprocessing
     if postproc == "none":
-        question = f"\nQuestion: {question}"
+        pass
     elif postproc == "length":
         question = f"\nConstraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
     elif postproc == "format":
