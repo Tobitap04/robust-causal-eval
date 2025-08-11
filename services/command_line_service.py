@@ -192,15 +192,15 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                              " 's_bert_cor', 'nli_cor', 'q_len', 'ans_len'])")
 
     parser.add_argument("--preproc", type=str, default="none",
-                        choices=["none", "word_constraint"],
+                        choices=["none", "translate", "filter"],
                         help="Preprocessing of the question (default: 'none')")
 
     parser.add_argument("--inproc", type= str, default="none",
-                        choices=["none", "few_shot"],
+                        choices=["none", "cot", "few_shot_gooaq", "few_shot1", "few_shot3", "few_shot5", "few_shot7", "translate"],
                         help="Inprocessing of the question (default: 'none')")
 
     parser.add_argument("--postproc", type=str, default="none",
-                        choices=["none"],
+                        choices=["none", "format", "length"],
                         help="Postprocessing of the question (default: 'none')")
 
     parser.add_argument("--temp", type=float, default=0,

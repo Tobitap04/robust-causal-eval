@@ -1,5 +1,5 @@
 from evaluation.metrics import compute_metric
-from evaluation.prompting_funcs import postprocessing_func, preprocessing_func, inprocessing_func
+from evaluation.prompting_funcs import processing_func
 from services.command_line_service import print_evaluation_results, print_progress_bar, save_evaluation_results_latex
 from services.llm_service import LLMService
 import pandas as pd
@@ -66,29 +66,25 @@ class Evaluation:
            try:
                question_text = question.get('question_none_perturb')
                answer_text = question.get('answer')
+               dataset = question.get('dataset')
                if question_text is None or answer_text is None:
                    print()
                    logging.warning(f"Evaluation: Question or answer missing at index {idx}. Skipping.")
                    continue
 
-               answer_words_count = len(answer_text.split())
-               reference_preprocessed = preprocessing_func(question_text, self.preprocessing, answer_words_count)
-               reference_inprocessed = inprocessing_func(reference_preprocessed, self.inprocessing, self.llm_service, self.temperature)
-               reference_postprocessed = postprocessing_func(reference_inprocessed, self.postprocessing)
+               reference_response = processing_func(question_text, self.preprocessing, self.inprocessing, self.postprocessing, dataset, self.llm_service, self.temperature)
                for perturbation in self.perturbation_levels:
                    #print(f"\r\033[KEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Status: Generating results...", end="", flush=True)
                    try:
                        perturbed_question = question.get(f'question_{perturbation}_perturb')
-                       hypothesis_preprocessed = preprocessing_func(perturbed_question, self.preprocessing, answer_words_count)
-                       hypothesis_inprocessed = inprocessing_func(hypothesis_preprocessed, self.inprocessing, self.llm_service, self.temperature) # + 0.000000000001 (worse results)
-                       hypothesis_postprocessed = postprocessing_func(hypothesis_inprocessed, self.postprocessing)
+                       hypothesis_response = processing_func(perturbed_question, self.preprocessing, self.inprocessing, self.postprocessing, dataset, self.llm_service, self.temperature)
                        #print(f"\nQuestion:\n {perturbed_question}")
-                       #print(f"Response:\n {hypothesis_postprocessed}")
-                       #print(f"Reference:\n {reference_postprocessed}")
+                       #print(f"Response:\n {hypothesis_response}")
+                       #print(f"Reference:\n {reference_response}")
                        #print(f"Ground Truth Answer:\n {answer_text}")
                        for metric in self.metrics:
                            try:
-                               score = compute_metric(hypothesis_postprocessed, reference_postprocessed, answer_text, perturbed_question, metric)
+                               score = compute_metric(hypothesis_response, reference_response, answer_text, perturbed_question, metric)
                                results[metric][perturbation].append(score)
                                #print(f"Metric {metric}: {score}")
                                #print(f"\rEvaluation in progress: Question {idx}/{num_questions}: \"{question_text[:60]}...\" | Perturbation: {perturbation} | Metric: {metric} | Status: Score calculated: {score:.4f}", end="", flush=True)

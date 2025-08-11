@@ -1,6 +1,7 @@
 from evaluation.evaluation import Evaluation
 from services.llm_service import LLMService
 from services.command_line_service import get_cl_args_eval
+from evaluation.prompting_funcs import processing_func
 
 def main():
     # Get command line arguments
