@@ -38,6 +38,19 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
+    elif preproc == "correct":
+        print(f"Question before filtering: {question}")
+        prompt = (
+            "Correct all spelling mistakes in the text, including letter swaps, missing letters, extra letters, or incorrect capitalization. "
+            "If a word is unclear, infer the most likely intended word based on context. "
+            "Also standardize capitalization and ensure punctuation is meaningful and contextually appropriate. "
+            "Do not change word order, wording, or phrasing except as required to fix spelling, capitalization, and punctuation. "
+            "Do not add any new words that were not present in the original text. "
+            "Output only the corrected text inside <result>...</result>."
+            f"\n\nQuestion: {question}"
+        )
+        question = filter_result(llm_service.get_llm_response(prompt))
+        print(f"Question after filtering: {question}\n\n")
     else:
         raise ValueError(f"Invalid preprocessing type specified: {preproc}.")
 
