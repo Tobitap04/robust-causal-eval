@@ -26,15 +26,15 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
         pass
     elif preproc == "translate":
         prompt = (
-            "If the following question is not entirely in English, translate it into English. "
-            "Otherwise, output it unchanged. Output only the final text inside <result>...</result>."
+            "If the question is not fully in English, translate it into English while preserving the original wording as closely as possible. "
+            "If it is already entirely in English, leave it unchanged. Output only the final text inside <result>...</result>."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
     elif preproc == "filter":
         prompt = (
-            "Remove all biased, irrelevant, or unnecessary details from the question, and correct any grammatical or spelling errors, "
-            "but ensure that the core meaning and essential question remain intact. Output only the final text inside <result>...</result>."
+            "Remove all biased or irrelevant information from the question, including any details that are not essential to understanding or answering it. "
+            "Preserve the core meaning and the essential question exactly. Output only the final text inside <result>...</result>."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
@@ -56,7 +56,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     if inproc == "none":
         pass
     elif inproc == "translate":
-        question = question + "\nPlace the final answer within <result>...</result>. If the question is not fully in English, first translate it into English, then answer the translated question."
+        question = question + "\nPlace the final answer within <result>...</result>. If the question is not fully in English, first translate it into English while preserving the original wording as closely as possible, then answer the translated question."
     elif inproc == "cot":
         question = question + "\nPlace the final answer within <result>...</result>. Any constraints given apply only to the final answer, not to the reasoning steps. Let's think step by step."
     elif bool(re.fullmatch(r'few_shot[0-9]', inproc)):
