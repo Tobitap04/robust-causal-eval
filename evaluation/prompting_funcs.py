@@ -73,10 +73,14 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
         pass
     elif postproc == "length":
         question = f"\nConstraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
-    elif postproc == "format":
+    elif postproc == "format1":
         question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
                     f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or effects for explanation). "
                     f"No additional text.\nQuestion: {question}")
+    elif postproc == "format2":
+        question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
+                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or effects for explanation). "
+                    f"Do not list any cause or effect more than once and add no additional text.\nQuestion: {question}")
     elif postproc == "voting":
         pass # TODO
     else:

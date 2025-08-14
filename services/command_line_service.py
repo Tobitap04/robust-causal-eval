@@ -200,7 +200,7 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                         help="Inprocessing of the question (default: 'none')")
 
     parser.add_argument("--postproc", type=str, default="none",
-                        choices=["none", "format", "length"],
+                        choices=["none", "format1", "format2", "length"],
                         help="Postprocessing of the question (default: 'none')")
 
     parser.add_argument("--temp", type=float, default=0,

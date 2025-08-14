@@ -114,4 +114,3 @@ class Evaluation:
                                      inprocessing=self.inprocessing, postprocessing=self.postprocessing,
                                      metrics=self.metrics, avg_results=avg_results,
                                      perturbation_levels=self.perturbation_levels, datasets=self.datasets, sample_path=self.sample_path)
-
