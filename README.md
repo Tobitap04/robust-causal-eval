@@ -49,6 +49,9 @@ python preprocessing_script.py create_sample --output_path data/unfiltered_sampl
 (After this you can delete the `data/raw` directory, as it is no longer needed.)
 
 ### Step 3: Filter sample
+
+> **Note:** Per default, we use the `gwdg.qwen2.5-72b-instruct` model for filtering and perturbation creation. You can specify a different LLM by using the `--llm` parameter.  
+
 To filter the sample, we removed all questions-answer pairs that did not meet the criteria defined in our paper. For this purpose, we developed a series of filtering functions tailored to create a high-quality dataset for our evaluation.  
 The filters were applied sequentially (in the order specified below), and the intermediate results were saved after each step.  
 Filtering is performed using a large language model (LLM) with a rate limit set to 10 requests per minute (this can be changed in `services/llm_service.py`). As a result, filtering larger samples may take **several hours**.  
@@ -73,14 +76,12 @@ python preprocessing_script.py sample_stats --input_path data/unfiltered_sample_
 ```
 ### Step 4: Create perturbations
 Finally, perturbations are created for the filtered sample. To ensure high-quality and diverse modifications, we use a large language model (LLM), which outperformed other methods in our tests.  
-All perturbations are generated using a one-shot prompting strategy defined in `preprocessing/perturbation_funcs.py`. The only exception is the character-level variant, which is generated using the typo library instead of the LLM.
+All perturbations are generated using a one-shot prompting strategy defined in `preprocessing/perturbation_funcs.py`. The only exception is the typo-level variant, which is generated using the typo library instead of the LLM.
 You can optionally set the perturbation intensity using `--intensity` (25, 50, 75, or 100). However, we recommend leaving it unset, as each type has a predefined default based on prior evaluation.  
 To create the perturbations, run the following command (this may also take **several hours**):
 ```bash
 python preprocessing_script.py create_perturbs --input_path data/filtered_03_question_new.csv --output_path data/final_sample_new.csv
 ```
-
-> **Note:** Per default, we use the `gwdg.qwen2.5-72b-instruct` model for filtering and perturbation creation. You can specify a different LLM by using the `--llm` parameter.  
 
 ## LLM Evaluation Instructions
 

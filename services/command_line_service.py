@@ -83,7 +83,6 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
         datasets (list[str]): List of datasets included in the evaluation.
         sample_path (str): Path to the sample.
     """
-    # Automatically detect metric groups based on suffix
     similarity_metrics = [m for m in avg_results if m.endswith("_sim")]
     correctness_metrics = [m for m in avg_results if m.endswith("_cor")]
     structure_metrics = [m for m in avg_results if m not in similarity_metrics + correctness_metrics]
@@ -104,14 +103,22 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
     def clean_name(p):
         return p.replace("_", "-")
 
-    # Open file for appending (creates the file if it doesn't exist)
     with open("results.tex", "a", encoding="utf-8") as f:
-        f.write("\\begin{table}[htb]\n")
-        f.write("\\label{table}\n")
-        f.write("\\centering\n")
-        f.write("\\scriptsize\n")
-
-        # Column format: one left column, then c...c for perturbations, then avg column
+        f.write("\\begin{table}[H]\n")
+        # Create caption
+        caption = (
+            f"LLM={clean_name(llm_name)}; "
+            f"Sample={clean_name(sample_path)}; "
+            f"Datasets={'all' if set(datasets) == {'eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'} else ', '.join(datasets)}; "
+            f"NQ={num_questions}; "
+            f"Pre={clean_name(preprocessing)}; "
+            f"In={clean_name(inprocessing)}; "
+            f"Post={clean_name(postprocessing)}; "
+            f"Temp={temperature}"
+        )
+        f.write(f"\\caption{{{caption}}}\n")
+        f.write("\\label{tab:}\n")
+        f.write("\\resizebox{\\textwidth}{!}{\n")
         f.write("\\begin{tabular}{l|" + "c" * len(perturbation_levels) + "|c}\n")
         f.write("\\toprule\n")
 
@@ -143,20 +150,7 @@ def save_evaluation_results_latex(llm_name: str, num_questions: int, preprocessi
         # End of table body
         f.write("\\bottomrule\n")
         f.write("\\end{tabular}\n")
-        f.write("\\vspace{0.75em}\n")
-
-        # Create caption
-        caption = (
-            f"LLM={clean_name(llm_name)}; "
-            f"Sample={clean_name(sample_path)}; "
-            f"Datasets={'all' if set(datasets) == {'eli5', 'gooaq', 'msmarco', 'naturalquestions', 'squad2'} else ', '.join(datasets)}; "
-            f"NQ={num_questions}; "
-            f"Pre={clean_name(preprocessing)}; "
-            f"In={clean_name(inprocessing)}; "
-            f"Post={clean_name(postprocessing)}; "
-            f"Temp={temperature}"
-        )
-        f.write(f"\\caption{{{caption}}}\n")
+        f.write("}\n")
         f.write("\\end{table}\n\n")  # add spacing between tables
     print("Results saved to results.tex")
 
@@ -176,9 +170,9 @@ def get_cl_args_eval() -> argparse.Namespace: # TODO: Add processing options
                         help="Number of questions to evaluate (default: 1000)")
 
     parser.add_argument("--perturbs", type=str, nargs='+',
-                        choices=["none", "char", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
-                        default=["none", "char", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
-                        help="Perturbation levels to test (default: ['none', 'char', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias'])")
+                        choices=["none", "typo", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
+                        default=["none", "typo", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
+                        help="Perturbation levels to test (default: ['none', 'typo', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias'])")
 
     parser.add_argument("--metrics", type=str, nargs='+',
                         choices=["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim",

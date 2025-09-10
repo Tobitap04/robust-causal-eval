@@ -147,7 +147,7 @@ class Preprocessing:
             raise ValueError(f"Input File {input_path} not in expected format.")
 
         expected_columns = [
-            "id", "question_none_perturb", "question_char_perturb", "question_synonym_perturb",
+            "id", "question_none_perturb", "question_typo_perturb", "question_synonym_perturb",
             "question_language_perturb", "question_paraphrase_perturb", "question_sentence_inj_perturb",
             "question_bias_perturb", "answer", "dataset"
         ]
@@ -161,7 +161,7 @@ class Preprocessing:
             out_df = pd.DataFrame()
             out_df["id"] = in_df["id"].astype(str)
             out_df["question_none_perturb"] = in_df["question_processed"].astype(str)
-            out_df["question_char_perturb"] = ""
+            out_df["question_typo_perturb"] = ""
             out_df["question_synonym_perturb"] = ""
             out_df["question_language_perturb"] = ""
             out_df["question_paraphrase_perturb"] = ""
@@ -171,10 +171,10 @@ class Preprocessing:
             out_df["dataset"] = in_df["dataset"].astype(str)
 
         levels = [
-            "char", "synonym", "language", "paraphrase", "sentence_inj", "bias"
+            "typo", "synonym", "language", "paraphrase", "sentence_inj", "bias"
         ]
         col_map = {
-            "char": "question_char_perturb",
+            "typo": "question_typo_perturb",
             "synonym": "question_synonym_perturb",
             "language": "question_language_perturb",
             "paraphrase": "question_paraphrase_perturb",

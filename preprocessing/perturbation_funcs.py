@@ -8,8 +8,8 @@ def perturbation_func(question: str, level: str, intensity: int, llm_service: LL
     Perturbation function that applies a specified level of perturbation to the question.
     Args:
         question (str): The question to perturb.
-        level (str): The level of perturbation to apply ('char', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias').
-        intensity (int): The intensity of the perturbation: 25, 50, 75, or 100.
+        level (str): The level of perturbation to apply ('typo', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias').
+        intensity (int): The intensity of the perturbation: 25, 50, 75, 100 or None (default).
         llm_service (LLMService): An instance of the LLM service used for generating perturbations.
     Returns:
         str: The perturbed question.
@@ -18,8 +18,8 @@ def perturbation_func(question: str, level: str, intensity: int, llm_service: LL
     """
     if intensity not in [25, 50, 75, 100, None]:
         raise ValueError("Intensity must be one of the following values: 25, 50, 75, 100 or None (default value).")
-    if level == "char":
-        return char_level(question, intensity)
+    if level == "typo":
+        return typo_level(question, intensity)
     elif level == "synonym":
         return synonym_level(question, intensity, llm_service)
     elif level == "language":
@@ -34,14 +34,14 @@ def perturbation_func(question: str, level: str, intensity: int, llm_service: LL
         raise ValueError(f"Invalid perturbation type specified: {level}.")
 
 
-def char_level(question: str, intensity: int) -> str:
+def typo_level(question: str, intensity: int) -> str:
     """
-    Character-level perturbation function.
+    Typo-level perturbation function.
     Args:
         question (str): The question to perturb.
         intensity (int): The percentage of words to perturb.
     Returns:
-        str: The perturbed question with character-level changes.
+        str: The perturbed question with typo-level changes.
     """
     if intensity is None: intensity = 100 # Default intensity if not specified
 
