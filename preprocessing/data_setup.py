@@ -5,7 +5,7 @@ from collections import defaultdict
 import nlp
 import pandas as pd
 
-raw_dir = "data/raw"  # Directory where original split of the Webis-CausalQA dataset is stored
+raw_dir = "data/raw"  # Directory where original split of the Webis-CausalQA-22 dataset is stored
 
 
 def run_data_setup():

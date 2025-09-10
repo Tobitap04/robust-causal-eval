@@ -207,7 +207,7 @@ def get_cl_args_eval() -> argparse.Namespace:
                         help="Temperature setting for the LLM (default: 0)")
 
     parser.add_argument("--sample_path", type=str, default="data/final_sample.csv",
-                        help="Path to the perturbed sample of the Webis-CausalQA dataset.")
+                        help="Path to the perturbed sample of the Webis-CausalQA-22 dataset.")
 
     parser.add_argument("--latex", type=bool, default=False,
                         help="If true, prints results in LaTeX format for inclusion in a report (default: False)")
