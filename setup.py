@@ -5,8 +5,8 @@ import subprocess
 
 def install_requirements():
     subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
-    #subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "ratelimit"])
-    #subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "ratelimit"])
+    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "ratelimit"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "ratelimit"])
 
 
 def create_config_env():
