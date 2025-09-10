@@ -1,12 +1,15 @@
-from services.llm_service import LLMService
-import os
-import re
-import random
 import logging
+import os
+import random
+import re
+
 import pandas as pd
-from services.command_line_service import print_progress_bar
+
 from preprocessing.filter_funcs import build_prompt
 from preprocessing.perturbation_funcs import perturbation_func
+from services.command_line_service import print_progress_bar
+from services.llm_service import LLMService
+
 
 class Preprocessing:
     """
@@ -33,7 +36,7 @@ class Preprocessing:
         Raises:
             FileNotFoundError: If the raw data directory does not exist.
         """
-        raw_dir = "data/raw"  # Directory containing raw question of the  Webis-CausalQA dataset
+        raw_dir = "data/raw"  # Directory containing raw question of the Webis-CausalQA-22 dataset
         if not os.path.exists(raw_dir):
             raise FileNotFoundError(f"Data directory not found at {raw_dir}")
 
@@ -83,24 +86,24 @@ class Preprocessing:
 
     @staticmethod
     def sample_lookup(input_path: str, nq: int) -> None:
-       """
-       Reads the CSV file from `input_path`, samples `nq` questions, and prints question, answer, and dataset to the console.
-       Args:
-           input_path (str): Path to the input CSV file.
-           nq (int): Number of questions to sample and display.
-       Raises:
-           FileNotFoundError: If the input file does not exist.
-       """
-       if not os.path.exists(input_path):
-           raise FileNotFoundError(f"File not found: {input_path}")
-       df = pd.read_csv(input_path)
-       if df.empty:
-           print("The file contains no questions.")
-           return
-       sample_df = df.sample(n=min(nq, len(df)))
-       print(f"Sampled {len(sample_df)} questions from {input_path}:\n")
-       for _, row in sample_df.iterrows():
-           print(f"Question: {row['question_processed']}\nAnswer: {row['answer_processed']}\n{'-'*40}")
+        """
+        Reads the CSV file from `input_path`, samples `nq` questions, and prints questions, answers, and datasets to the console.
+        Args:
+            input_path (str): Path to the input CSV file.
+            nq (int): Number of questions to sample and display.
+        Raises:
+            FileNotFoundError: If the input file does not exist.
+        """
+        if not os.path.exists(input_path):
+            raise FileNotFoundError(f"File not found: {input_path}")
+        df = pd.read_csv(input_path)
+        if df.empty:
+            print("The file contains no questions.")
+            return
+        sample_df = df.sample(n=min(nq, len(df)))
+        print(f"Sampled {len(sample_df)} questions from {input_path}:\n")
+        for _, row in sample_df.iterrows():
+            print(f"Question: {row['question_processed']}\nAnswer: {row['answer_processed']}\n{'-' * 40}")
 
     @staticmethod
     def sample_stats(input_path: str) -> None:
@@ -200,7 +203,7 @@ class Preprocessing:
             # Regularly save progress
             if idx % 5 == 0:
                 out_df.to_csv(output_path, index=False)
-        print_progress_bar(idx+1, total)
+        print_progress_bar(idx + 1, total)
         out_df.to_csv(output_path, index=False)
         print("\nPerturbations created and saved to:", output_path)
 
@@ -261,11 +264,11 @@ class Preprocessing:
                 out_df = pd.concat([out_df, pd.DataFrame([row])], ignore_index=True)
             else:
                 stats[dataset] = stats.get(dataset, 0) + 1
-            # Save progress for robustness
+            # Regularly save progress
             if idx % 20 == 0:
                 out_df.to_csv(output_path, index=False)
         out_df.to_csv(output_path, index=False)
-        print_progress_bar(idx+1, total)
+        print_progress_bar(idx + 1, total)
         print("\nFiltering finished. Output saved to:", output_path)
         print("Removed questions per dataset:")
         for ds, count in stats.items():
@@ -293,4 +296,4 @@ class Preprocessing:
         if match:
             return match.group(1)
         else:
-           raise ValueError(f"Unexpected response format for filter '{filter_type}': {response}")
+            raise ValueError(f"Unexpected response format for filter '{filter_type}': {response}")

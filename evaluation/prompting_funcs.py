@@ -3,9 +3,12 @@ import re
 
 from services.llm_service import LLMService
 
-dataset_answer_lengths = {'eli5': int(99), 'gooaq': int(44.3), 'msmarco': int(17.5), 'naturalquestions': int(10.8), 'squad2': int(6.2)}
+dataset_answer_lengths = {'eli5': int(99), 'gooaq': int(44.3), 'msmarco': int(17.5), 'naturalquestions': int(10.8),
+                          'squad2': int(6.2)}
 
-def processing_func(question: str, preproc: str, inproc: str, postproc: str, dataset: str, llm_service: LLMService, temp: float) -> str:
+
+def processing_func(question: str, preproc: str, inproc: str, postproc: str, dataset: str, llm_service: LLMService,
+                    temp: float) -> str:
     """
     This function handels the pre-, in- and postprocessing of the question.
     Args:
@@ -26,24 +29,30 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
         pass
     elif preproc == "translate":
         prompt = (
-            "If the question is not fully in English, translate it into English while preserving the original wording as closely as possible. "
-            "If it is already entirely in English, leave it unchanged. Output only the final text inside <result>...</result>."
+            "If the question is not fully in English, translate it into English while preserving the original wording "
+            "as closely as possible."
+            "If it is already entirely in English, leave it unchanged. Output only the final text inside "
+            "<result>...</result>."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
     elif preproc == "filter":
         prompt = (
-            "Remove all biased or irrelevant information from the question, including any details that are not essential to understanding or answering it. "
-            "Preserve the core meaning and the essential question exactly. Output only the final text inside <result>...</result>."
+            "Remove all biased or irrelevant information from the question, including any details that are not "
+            "essential to understanding or answering it."
+            "Preserve the core meaning and the essential question exactly. Output only the final text inside "
+            "<result>...</result>."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
     elif preproc == "correct":
         prompt = (
-            "Correct all spelling mistakes in the text, including letter swaps, missing letters, extra letters, or incorrect capitalization. "
+            "Correct all spelling mistakes in the text, including letter swaps, missing letters, extra letters, "
+            "or incorrect capitalization."
             "If a word is unclear, infer the most likely intended word based on context. "
             "Also standardize capitalization and ensure punctuation is meaningful and contextually appropriate. "
-            "Do not change word order, wording, or phrasing except as required to fix spelling, capitalization, and punctuation. "
+            "Do not change word order, wording, or phrasing except as required to fix spelling, capitalization, "
+            "and punctuation."
             "Do not add any new words that were not present in the original text. "
             "Output only the corrected text inside <result>...</result>."
             f"\n\nQuestion: {question}"
@@ -56,15 +65,18 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     if inproc == "none":
         pass
     elif inproc == "translate":
-        question = question + "\nPlace the final answer within <result>...</result>. If the question is not fully in English, first translate it into English while preserving the original wording as closely as possible, then answer the translated question."
+        question = question + ("\nPlace the final answer within <result>...</result>. If the question is not fully in "
+                               "English, first translate it into English while preserving the original wording as "
+                               "closely as possible, then answer the translated question.")
     elif inproc == "cot":
-        question = question + "\nPlace the final answer within <result>...</result>. Any constraints given apply only to the final answer, not to the reasoning steps. Let's think step by step."
+        question = question + ("\nPlace the final answer within <result>...</result>. Any constraints given apply only "
+                               "to the final answer, not to the reasoning steps. Let's think step by step.")
     elif bool(re.fullmatch(r'few_shot[0-9]', inproc)):
         question = question + few_shot(int(inproc[-1]))
     elif inproc == "few_shot_gooaq":
         question = question + few_shot_qooaq()
     elif inproc == "causal_chain":
-        pass # TODO
+        pass  # TODO
     else:
         raise ValueError(f"Invalid inprocessing type specified: {inproc}.")
 
@@ -75,14 +87,16 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
         question = f"\nConstraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
     elif postproc == "format1":
         question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
-                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or effects for explanation). "
+                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
+                    f"effects for explanation)."
                     f"No additional text.\nQuestion: {question}")
     elif postproc == "format2":
         question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
-                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or effects for explanation). "
+                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
+                    f"effects for explanation)."
                     f"Do not list any cause or effect more than once and add no additional text.\nQuestion: {question}")
     elif postproc == "voting":
-        pass # TODO
+        pass  # TODO
     else:
         raise ValueError(f"Invalid postprocessing type specified: {postproc}.")
 
@@ -132,6 +146,7 @@ def few_shot(n: int) -> str:
     selected_examples = random.sample(examples, n)
     return f"{instruction}\n" + "\n".join(selected_examples) + f"\n\n{end}"
 
+
 def few_shot_qooaq() -> str:
     """
     Applies few-shot prompting specifically for the Gooaq dataset. Contains only examples from the Gooaq dataset.
@@ -162,6 +177,7 @@ def few_shot_qooaq() -> str:
         "of those gases, known as greenhouse gases, water vapour has the largest effect."
     ]
     return f"{instruction}\n" + "\n".join(examples) + f"\n\n{end}"
+
 
 def filter_result(result: str) -> str:
     """

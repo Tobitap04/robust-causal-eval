@@ -1,9 +1,10 @@
-import subprocess
 import os
+import subprocess
 
 
 def install_requirements():
     subprocess.check_call(["pip", "install", "-r", "requirements.txt"])
+
 
 def create_config_env():
     api_key = input("Please enter your LLM_API_KEY: ")
@@ -12,6 +13,7 @@ def create_config_env():
     with open("config.env", "w") as f:
         f.write(config_content)
     print("config.env has been created.")
+
 
 if __name__ == "__main__":
     print("Setup started.")

@@ -1,7 +1,7 @@
+from preprocessing.data_setup import run_data_setup
 from preprocessing.preprocessing import Preprocessing
 from services.command_line_service import get_cl_args_preproc
 from services.llm_service import LLMService
-from preprocessing.data_setup import run_data_setup
 
 
 def main():
@@ -13,7 +13,8 @@ def main():
             raise ValueError("input_path, output_path, llm and filter must be specified for filter_questions function.")
         llm_service = LLMService(llm_name=args.llm)
         preprocessing = Preprocessing(llm_service=llm_service)
-        preprocessing.filter_questions(input_path=args.input_path, output_path=args.output_path, filter_type=args.filter)
+        preprocessing.filter_questions(input_path=args.input_path, output_path=args.output_path,
+                                       filter_type=args.filter)
     elif args.function == "create_sample":
         if not args.nq or not args.output_path:
             raise ValueError("Both nq and output_path must be specified for create_sample function.")
@@ -34,7 +35,9 @@ def main():
             raise ValueError("input_path, output_path and llm must be specified for create_perturbs function.")
         llm_service = LLMService(llm_name=args.llm)
         preprocessing = Preprocessing(llm_service=llm_service)
-        preprocessing.create_perturbs(input_path=args.input_path, output_path=args.output_path, intensity=args.intensity)
+        preprocessing.create_perturbs(input_path=args.input_path, output_path=args.output_path,
+                                      intensity=args.intensity)
+
 
 if __name__ == "__main__":
     main()

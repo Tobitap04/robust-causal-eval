@@ -1,22 +1,26 @@
-from collections import defaultdict
-import pandas as pd
-import shutil
-import nlp
 import os
+import shutil
+from collections import defaultdict
 
+import nlp
+import pandas as pd
 
 raw_dir = "data/raw"  # Directory where original split of the Webis-CausalQA dataset is stored
 
+
 def run_data_setup():
-    """Sets up the raw data by downloading the ELI5 dataset, merging corresponding CSV files, and deleting unnecessary columns."""
+    """Sets up the raw data by downloading the ELI5 dataset, merging corresponding CSV files, and deleting
+    unnecessary columns."""
     print("Starting data setup...")
     create_eli5_dataset()
     merge_datasets()
     delete_unnecessary_columns()
     print("Data setup completed.")
 
+
 def delete_unnecessary_columns():
-    """Deletes all columns except "id", "question_processed", and "answer_processed" from all CSV files in the raw directory."""
+    """Deletes all columns except "id", "question_processed", and "answer_processed" from all CSV files in the raw
+    directory."""
     print("Deleting unnecessary columns from CSV files in the raw directory...")
     for filename in os.listdir(raw_dir):
         if filename.endswith(".csv"):
@@ -25,6 +29,7 @@ def delete_unnecessary_columns():
             cols = [col for col in ["id", "question_processed", "answer_processed"] if col in df.columns]
             df = df[cols]
             df.to_csv(path, index=False)
+
 
 def merge_datasets():
     """Merges all CSV files in the raw directory that share the same prefix before the first "_" into a single file."""
@@ -54,7 +59,8 @@ def merge_datasets():
 
 
 def create_eli5_dataset():
-    """Downloads the ELI5 dataset and processes it to keep only the questions and answers belonging to the Webis-CausalQA dataset."""
+    """Downloads the ELI5 dataset and processes it to keep only the questions and answers belonging to the
+    Webis-CausalQA-22 dataset."""
     # Paths to the CSV files of the original splits (which only contain the IDs of the questions)
     train_ids_path = raw_dir + "/eli5_train_original_split.csv"
     valid_ids_path = raw_dir + "/eli5_valid_original_split.csv"

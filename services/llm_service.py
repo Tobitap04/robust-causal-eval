@@ -1,10 +1,11 @@
-from openai import OpenAI
-from tenacity import retry, wait_exponential, stop_after_attempt
-from ratelimit import limits, RateLimitException
-from dotenv import load_dotenv
 import logging
-import time
 import os
+import time
+
+from dotenv import load_dotenv
+from openai import OpenAI
+from ratelimit import limits, RateLimitException
+from tenacity import retry, wait_exponential, stop_after_attempt
 
 
 class LLMService:
@@ -36,18 +37,18 @@ class LLMService:
 
     @staticmethod
     def handle_rate_limit(retry_state):
-       """Handles rate limit exceptions by sleeping for the remaining period.
-       Args:
-            retry_state (RetryCallState): The state of the retry call.
-       """
-       exc = retry_state.outcome.exception()
-       if isinstance(exc, RateLimitException):
-           time.sleep(getattr(exc, "period_remaining", 0))
+        """Handles rate limit exceptions by sleeping for the remaining period.
+        Args:
+             retry_state (RetryCallState): The state of the retry call.
+        """
+        exc = retry_state.outcome.exception()
+        if isinstance(exc, RateLimitException):
+            time.sleep(getattr(exc, "period_remaining", 0))
 
     @retry(
-       wait=wait_exponential(multiplier=1, min=2, max=30),
-       stop=stop_after_attempt(7),
-       before_sleep=handle_rate_limit,
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        stop=stop_after_attempt(7),
+        before_sleep=handle_rate_limit,
     )
     @limits(calls=RPM, period=60)
     def get_llm_response(self, prompt: str, temperature: float = 1) -> str:
@@ -68,14 +69,15 @@ class LLMService:
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 stream=True,
-                **({"extra_body": {"cache": {"no-cache": True}}} if "gwdg" in self.llm_name else {}) # No caching for gwdg models
+                **({"extra_body": {"cache": {"no-cache": True}}} if "gwdg" in self.llm_name else {})
+                # No caching for gwdg models
             )
             response = ""
             for chunk in stream:
                 delta = chunk.choices[0].delta.content
                 if delta is not None:
                     response += delta
-            
+
             # Remove the </think> tag of reasoning if present
             if "</think>" in response:
                 return response.split("</think>", 1)[-1].strip()

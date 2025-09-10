@@ -1,6 +1,8 @@
-from services.llm_service import LLMService
-import typo
 import random
+
+import typo
+
+from services.llm_service import LLMService
 
 
 def perturbation_func(question: str, level: str, intensity: int, llm_service: LLMService = None) -> str:
@@ -8,7 +10,8 @@ def perturbation_func(question: str, level: str, intensity: int, llm_service: LL
     Perturbation function that applies a specified level of perturbation to the question.
     Args:
         question (str): The question to perturb.
-        level (str): The level of perturbation to apply ('typo', 'synonym', 'language', 'paraphrase', 'sentence_inj', 'bias').
+        level (str): The level of perturbation to apply ('typo', 'synonym', 'language', 'paraphrase',
+        'sentence_inj', 'bias').
         intensity (int): The intensity of the perturbation: 25, 50, 75, 100 or None (default).
         llm_service (LLMService): An instance of the LLM service used for generating perturbations.
     Returns:
@@ -43,7 +46,7 @@ def typo_level(question: str, intensity: int) -> str:
     Returns:
         str: The perturbed question with typo-level changes.
     """
-    if intensity is None: intensity = 100 # Default intensity if not specified
+    if intensity is None: intensity = 100  # Default intensity if not specified
 
     typo_methods = [
         "char_swap",
@@ -106,7 +109,7 @@ def typo_level(question: str, intensity: int) -> str:
 
         return text[:index] + flipped_char + text[index + 1:]
 
-    number_perturbs = max(int(len(question.split()) * (intensity/100)), 1) # Ensure at least one perturbation
+    number_perturbs = max(int(len(question.split()) * (intensity / 100)), 1)  # Ensure at least one perturbation
     selected_perturbs = random.choices(typo_methods, k=number_perturbs)
 
     for method in selected_perturbs:
@@ -149,6 +152,7 @@ def typo_level(question: str, intensity: int) -> str:
 
     return question
 
+
 def synonym_level(question: str, intensity: int, llm_service: LLMService) -> str:
     """
     Synonym-level perturbation function.
@@ -159,7 +163,7 @@ def synonym_level(question: str, intensity: int, llm_service: LLMService) -> str
     Returns:
         str: The perturbed question with synonym-level changes.
     """
-    if intensity is None: intensity = 75 # Default intensity if not specified
+    if intensity is None: intensity = 75  # Default intensity if not specified
     word_count = len(question.split())
     num_words = max(1, int((word_count * intensity) / 100))
     remaining_words = min(word_count - 1, word_count - num_words)
@@ -168,12 +172,13 @@ def synonym_level(question: str, intensity: int, llm_service: LLMService) -> str
         "Given the following text:\n"
         f"{question}\n"
         f"{instructions['synonym_level'].format(num_words=num_words, intensity=intensity, remaining_words=remaining_words)}"
-        f"Example with replacing {max(1, int((10 * intensity)/100))} words:\n"
+        f"Example with replacing {max(1, int((10 * intensity) / 100))} words:\n"
         f"Question: {examples['question']}\n"
         f"<result>{examples['synonym_level'][intensity]}</result>"
     )
 
     return filter_result(llm_service.get_llm_response(prompt))
+
 
 def language_level(question: str, intensity: int, llm_service: LLMService) -> str:
     """
@@ -185,7 +190,7 @@ def language_level(question: str, intensity: int, llm_service: LLMService) -> st
     Returns:
         str: The perturbed question with language-level changes.
     """
-    if intensity is None: intensity = 50 # Default intensity if not specified
+    if intensity is None: intensity = 50  # Default intensity if not specified
     languages = ["German", "French", "Spanish", "Italian", "Portuguese"]
     word_count = len(question.split())
     num_words = max(1, int((word_count * intensity) / 100))
@@ -203,6 +208,7 @@ def language_level(question: str, intensity: int, llm_service: LLMService) -> st
 
     return filter_result(llm_service.get_llm_response(prompt))
 
+
 def paraphrase_level(question: str, intensity: int, llm_service: LLMService) -> str:
     """
     Paraphrase-level perturbation function.
@@ -213,17 +219,19 @@ def paraphrase_level(question: str, intensity: int, llm_service: LLMService) -> 
     Returns:
         str: The paraphrased question.
     """
-    if intensity is None: intensity = 75 # Default intensity if not specified
+    if intensity is None: intensity = 75  # Default intensity if not specified
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
-        f"Instruction: {instructions['paraphrase_level'][intensity]} Enclose the result in the tags as demonstrated in the example.\n"
+        f"Instruction: {instructions['paraphrase_level'][intensity]} Enclose the result in the tags as demonstrated "
+        f"in the example.\n"
         f"Example:\n"
         f"Question: {examples['question']}\n"
         f"<result>{examples['paraphrase_level'][intensity]}</result>"
     )
 
     return filter_result(llm_service.get_llm_response(prompt))
+
 
 def sentence_injection_level(question: str, intensity: int, llm_service: LLMService) -> str:
     """
@@ -239,13 +247,15 @@ def sentence_injection_level(question: str, intensity: int, llm_service: LLMServ
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
-        f"Instruction: {instructions['sentence_injection_level'][intensity]} Enclose the result in the tags as demonstrated in the example.\n"
+        f"Instruction: {instructions['sentence_injection_level'][intensity]} Enclose the result in the tags as "
+        f"demonstrated in the example.\n"
         f"Example:\n"
         f"Question: {examples['question']}\n"
         f"<result>{examples['sentence_injection_level'][intensity]}</result>"
     )
 
     return filter_result(llm_service.get_llm_response(prompt))
+
 
 def bias_level(question: str, intensity: int, llm_service: LLMService) -> str:
     """
@@ -261,13 +271,16 @@ def bias_level(question: str, intensity: int, llm_service: LLMService) -> str:
     prompt = (
         "Given the following text:\n"
         f"{question}\n"
-        f"Instruction: {instructions['bias_level'][intensity]} The original question must remain part of the text, either in its exact wording or as a paraphrase. No additional questions should be introduced. Enclose the result in the tags as demonstrated in the example.\n"
+        f"Instruction: {instructions['bias_level'][intensity]} The original question must remain part of the text, "
+        f"either in its exact wording or as a paraphrase. No additional questions should be introduced. Enclose the "
+        f"result in the tags as demonstrated in the example.\n"
         f"Example:\n"
         f"Question: {examples['question']}\n"
         f"<result>{examples['bias_level'][intensity]}</result>"
     )
 
     return filter_result(llm_service.get_llm_response(prompt))
+
 
 def filter_result(result: str) -> str:
     """
@@ -284,6 +297,7 @@ def filter_result(result: str) -> str:
         return result.split("<result>")[1].split("</result>")[0].strip()
     else:
         raise ValueError("The LLM response does not contain the expected <result> tags.")
+
 
 instructions = {
     "synonym_level": (

@@ -1,10 +1,11 @@
+import torch
+from bert_score import score as bert_score
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk.translate.chrf_score import sentence_chrf
-from bert_score import score as bert_score
 from rouge_score import rouge_scorer
-import torch
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, logging
+
 logging.set_verbosity_error()
 
 
@@ -17,7 +18,8 @@ def compute_metric(hypothesis: str, reference: str, answer: str, question: str, 
         reference: The result without any perturbations.
         answer (str): Ground truth answer string.
         question (str): The (perturbed) question before any processing.
-        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor', chrf_sim', 'chrf_cor', 's_bert_sim', 's_bert_cor', 'nli_sim', 'nli_cor', 'q_len'. 'ans_len').
+        metric (str): Metric to compute ('rouge_sim', 'rouge_cor', 'bleu_sim', 'bleu_cor', 'bert_sim', 'bert_cor',
+        chrf_sim', 'chrf_cor', 's_bert_sim', 's_bert_cor', 'nli_sim', 'nli_cor', 'q_len'. 'ans_len').
     Returns:
         float: Computed metric score.
     Raises:
@@ -56,6 +58,8 @@ def compute_metric(hypothesis: str, reference: str, answer: str, question: str, 
 
 
 rouge_scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+
+
 def rouge(hypothesis: str, reference: str) -> float:
     """
     Computes the ROUGE-L F1 score between a hypothesis and a reference answer.
@@ -72,6 +76,8 @@ def rouge(hypothesis: str, reference: str) -> float:
 
 
 smoothing_fn = SmoothingFunction()
+
+
 def bleu(hypothesis: str, reference: str) -> float:
     """
     Computes the BLEU score between a hypothesis and a reference answer.
@@ -90,14 +96,14 @@ def bleu(hypothesis: str, reference: str) -> float:
 
 def bert(hypothesis: str, reference: str) -> float:
     """
-    Computes the BERT score F1 between a hypothesis and a reference answer.
+    Computes the BERT-F1 score between a hypothesis and a reference answer.
 
     Args:
         hypothesis (str): The generated answer.
         reference (str): The ground truth answer or another generated answer.
 
     Returns:
-        float: BERT score F1.
+        float: BERT-F1 score.
     """
     P, R, F1 = bert_score([hypothesis], [reference], model_type='bert-base-uncased', lang='en')
     return F1[0].item()
@@ -110,12 +116,14 @@ def chrf(hypothesis: str, reference: str) -> float:
         hypothesis (str): The generated answer.
         reference (str): The ground truth answer or another generated answer.
     Returns:
-        float: CHRF score normalized to [0, 1].
+        float: CHRF score
     """
     return sentence_chrf(reference, hypothesis)
 
 
 sBert_model = SentenceTransformer("all-mpnet-base-v2")
+
+
 def s_bert(hypothesis: str, reference: str) -> float:
     """
     Computes the cosine similarity between the embeddings of two texts.
@@ -133,6 +141,7 @@ def s_bert(hypothesis: str, reference: str) -> float:
 nli_model_name = "roberta-large-mnli"
 nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name)
 nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name)
+
 
 def nli_entailment_score(hypothesis: str, reference: str) -> float:
     """
@@ -156,5 +165,4 @@ def nli_entailment_score(hypothesis: str, reference: str) -> float:
         logits2 = nli_model(**inputs2).logits
     probs2 = torch.softmax(logits2, dim=-1).squeeze()
     score2 = probs2[2].item()
-
     return (score1 + score2) / 2
