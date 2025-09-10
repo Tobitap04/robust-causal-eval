@@ -96,8 +96,8 @@ Use `evaluation_script.py` to evaluate the robustness of a large language model 
 ```
 ### Customization Options
 
-- **Output format:** By default, results are printed to the console. Use `--latex` to also save results as a LaTeX table (`results.tex` will be created if it does not exist).
-- **Sample file:** By default, the script uses the preprocessed and filtered sample at `data/final_sample.csv`. Use `--sample_path` to specify a different file.
+- **Output format:** By default, results are printed to the console. Use `--latex` to additionally save results as a LaTeX table (`results.tex` will be created if it does not exist).
+- **Sample file:** By default, the script uses our preprocessed and filtered sample at `data/final_sample.csv`. Use `--sample_path` to specify a different file.
 - **Datasets:** Evaluate specific datasets within the sample using `--datasets`. Available options: `eli5`, `gooaq`, `msmarco`, `naturalquestions`, `squad2`. Multiple datasets can be specified separated by spaces.
 - **Perturbations:** By default, all perturbations are tested. Use `--perturbs` to select specific perturbations. Available options: `none`, `typo`, `synonym`, `language`, `paraphrase`, `sentence-inj`, `bias`. Multiple perturbations can be specified separated by spaces.
 - **Temperature:** The model temperature defaults to 0. Change with `--temp`.
@@ -110,16 +110,16 @@ Use `evaluation_script.py` to evaluate the robustness of a large language model 
 
 Test `gemini-2.5-flash-lite` on 500 questions, save results as LaTeX, use a custom sample file, select specific datasets, evaluate selected perturbations, set temperature, and apply processing steps:
 ```bash
-python evaluation_script.py
-  --llm gemini-2.5-flash-lite
-  --nq 500
-  --latex true
-  --sample_path data/final_sample_new.csv
-  --datasets gooaq naturalquestions
-  --perturbs none typo bias
-  --temp 1
-  --preproc translate
-  --inproc cot
+python evaluation_script.py \
+  --llm gemini-2.5-flash-lite \
+  --nq 500 \
+  --latex true \
+  --sample_path data/final_sample_new.csv \
+  --datasets gooaq naturalquestions \
+  --perturbs none typo bias \
+  --temp 1 \
+  --preproc translate \
+  --inproc cot \
   --postproc length
 ```
 
