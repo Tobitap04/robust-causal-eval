@@ -68,9 +68,7 @@ You can also use the following function to check the number of questions per dat
 python preprocessing_script.py sample_stats --input_path data/unfiltered_sample_new.csv
 ```
 ### Step 4: Create perturbations
-Finally, perturbations are created for the filtered sample. To ensure high-quality and diverse modifications, we use a large language model (LLM), which outperformed other methods in our tests. All perturbations are generated using a one-shot prompting strategy defined in `preprocessing/perturbation_funcs.py`. The only exception is the typo-level variant, which is generated using the typo library instead of the LLM.
-You can optionally set the overall perturbation intensity using `--intensity` (25, 50, 75, or 100). However, we recommend leaving it unset, as each type has a predefined default based on prior evaluation.  
-To create the perturbations, run the following command (this may also take **several hours**):
+Finally, perturbations are created for the filtered sample. To ensure high-quality and diverse modifications, we use a large language model (LLM), which outperformed other methods in our tests. All perturbations are generated using a one-shot prompting strategy defined in `preprocessing/perturbation_funcs.py`. The only exception is the typo-level variant, which is generated using the typo library instead of the LLM.  You can optionally set the overall perturbation intensity using `--intensity` (25, 50, 75, or 100). However, we recommend leaving it unset, as each type has a predefined default based on prior evaluation. To create the perturbations, run the following command (this may also take **several hours**):
 ```bash
 python preprocessing_script.py create_perturbs --input_path data/filtered_03_question_new.csv --output_path data/final_sample_new.csv
 ```
