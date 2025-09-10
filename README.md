@@ -50,7 +50,7 @@ python preprocessing_script.py create_sample --output_path data/unfiltered_sampl
 
 ### Step 3: Filter sample
 
-> **Note:** Per default, we use the `gwdg.qwen2.5-72b-instruct` model for filtering and perturbation creation. You can specify a different LLM by using the `--llm` parameter.  
+> **Note:** Per default, we use the `gwdg.qwen2.5-72b-instruct` model for filtering and perturbation generation. You can specify a different LLM by using the `--llm` parameter,  as long as it is supported by the OpenAI platform. However, please note that we cannot guarantee the prompts will perform equally well with other models.
 
 To filter the sample, we removed all questions-answer pairs that did not meet the criteria defined in our paper. For this purpose, we developed a series of filtering functions tailored to create a high-quality dataset for our evaluation.  
 The filters were applied sequentially (in the order specified below), and the intermediate results were saved after each step.  
@@ -77,7 +77,7 @@ python preprocessing_script.py sample_stats --input_path data/unfiltered_sample_
 ### Step 4: Create perturbations
 Finally, perturbations are created for the filtered sample. To ensure high-quality and diverse modifications, we use a large language model (LLM), which outperformed other methods in our tests.  
 All perturbations are generated using a one-shot prompting strategy defined in `preprocessing/perturbation_funcs.py`. The only exception is the typo-level variant, which is generated using the typo library instead of the LLM.
-You can optionally set the perturbation intensity using `--intensity` (25, 50, 75, or 100). However, we recommend leaving it unset, as each type has a predefined default based on prior evaluation.  
+You can optionally set the overall perturbation intensity using `--intensity` (25, 50, 75, or 100). However, we recommend leaving it unset, as each type has a predefined default based on prior evaluation.  
 To create the perturbations, run the following command (this may also take **several hours**):
 ```bash
 python preprocessing_script.py create_perturbs --input_path data/filtered_03_question_new.csv --output_path data/final_sample_new.csv
@@ -85,7 +85,46 @@ python preprocessing_script.py create_perturbs --input_path data/filtered_03_que
 
 ## LLM Evaluation Instructions
 
-- latex param
-- Help cl function für beides scripts erwähnen
-- extra parameter erklären
-- All models useable that support openai api
+Use `evaluation_script.py` to evaluate the robustness of a large language model (LLM). You must specify:
+
+- The number of questions to evaluate (`--nq`)
+- The LLM to test (`--llm`), which must be compatible with the OpenAI platform
+
+**Example:** Evaluate `gwdg.llama-3.3-70b-instruct` on 300 questions:
+```bash
+  python evaluation_script.py --llm gwdg.llama-3.3-70b-instruct --nq 300
+```
+### Customization Options
+
+- **Output format:** By default, results are printed to the console. Use `--latex` to also save results as a LaTeX table (`results.tex` will be created if it does not exist).
+- **Sample file:** By default, the script uses the preprocessed and filtered sample at `data/final_sample.csv`. Use `--sample_path` to specify a different file.
+- **Datasets:** Evaluate specific datasets within the sample using `--datasets`. Available options: `eli5`, `gooaq`, `msmarco`, `naturalquestions`, `squad2`. Multiple datasets can be specified separated by spaces.
+- **Perturbations:** By default, all perturbations are tested. Use `--perturbs` to select specific perturbations. Available options: `none`, `typo`, `synonym`, `language`, `paraphrase`, `sentence-inj`, `bias`. Multiple perturbations can be specified separated by spaces.
+- **Temperature:** The model temperature defaults to 0. Change with `--temp`.
+- **Processing steps:** By default, no preprocessing, inprocessing, or postprocessing is applied. Enable them with `--preproc`, `--inproc`, and `--postproc`.
+  - Preprocessing options: `translate`, `filter`, `correct`
+  - Inprocessing strategies: `cot`, `translate`, `causal_chain`, `few_shot1`, `few_shot3`, `few_shot5`, `few_shot7`, `few_shot_gooaq`
+  - Postprocessing options: `format1`, `format2`, `length`, `voting`
+
+### Comprehensive Example
+
+Test `gemini-2.5-flash-lite` on 500 questions, save results as LaTeX, use a custom sample file, select specific datasets, evaluate selected perturbations, set temperature, and apply processing steps:
+```bash
+python evaluation_script.py
+  --llm gemini-2.5-flash-lite
+  --nq 500
+  --latex true
+  --sample_path data/final_sample_new.csv
+  --datasets gooaq naturalquestions
+  --perturbs none typo bias
+  --temp 1
+  --preproc translate
+  --inproc cot
+  --postproc length
+```
+
+### Help
+Further descriptions can be found within the help function of the script.
+```bash
+python evaluation_script.py --help
+```

@@ -167,28 +167,17 @@ def get_cl_args_eval() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Evaluate LLM robustness on causal questions.")
 
-    parser.add_argument("--llm", type=str, default="gwdg.llama-3.3-70b-instruct",
-                        help="Name of the LLM to evaluate (default: 'gwdg.llama-3.3-70b-instruct')", )
+    parser.add_argument("--llm", type=str,
+                        help="Name of the LLM to evaluate", )
 
-    parser.add_argument("--nq", type=int, default=1000,
-                        help="Number of questions to evaluate (default: 1000)")
+    parser.add_argument("--nq", type=int,
+                        help="Number of questions to evaluate")
 
     parser.add_argument("--perturbs", type=str, nargs='+',
                         choices=["none", "typo", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
                         default=["none", "typo", "synonym", "language", "paraphrase", "sentence_inj", "bias"],
                         help="Perturbation levels to test (default: ['none', 'typo', 'synonym', 'language', "
                              "'paraphrase', 'sentence_inj', 'bias'])")
-
-    parser.add_argument("--metrics", type=str, nargs='+',
-                        choices=["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim",
-                                 "rouge_cor", "bleu_cor", "chrf_cor", "bert_cor", "s_bert_cor", "nli_cor",
-                                 "q_len", "ans_len"],
-                        default=["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim",
-                                 "rouge_cor", "bleu_cor", "chrf_cor", "bert_cor", "s_bert_cor", "nli_cor",
-                                 "q_len", "ans_len"],
-                        help="Evaluation metrics to compute (default: ['rouge_sim', 'bleu_sim', 'chrf_sim',"
-                             " 'bert_sim', 's_bert_sim', 'nli_sim', 'rouge_cor', 'bleu_cor', 'chrf_cor', 'bert_cor',"
-                             " 's_bert_cor', 'nli_cor', 'q_len', 'ans_len'])")
 
     parser.add_argument("--preproc", type=str, default="none",
                         choices=["none", "translate", "filter", "correct"],

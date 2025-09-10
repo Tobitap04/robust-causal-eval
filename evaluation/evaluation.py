@@ -11,9 +11,8 @@ from services.llm_service import LLMService
 class Evaluation:
 
     def __init__(self, llm_service: LLMService, llm: str, nq: int,
-                 perturbs: list[str], metrics: list[str],
-                 preproc: str, inproc: str, postproc: str, temp: float, sample_path: str, datasets: list[str],
-                 latex: bool) -> None:
+                 perturbs: list[str], preproc: str, inproc: str, postproc: str, temp: float, sample_path: str,
+                 datasets: list[str], latex: bool) -> None:
         """
         Initializes the Evaluation class with the LLM service and evaluation parameters.
         Args:
@@ -21,7 +20,6 @@ class Evaluation:
             llm (str): Name of the LLM to evaluate.
             nq (int): Number of questions to evaluate.
             perturbs (list[str]): Perturbation levels to test.
-            metrics (list[str]): Evaluation metrics to compute.
             preproc (str): Preprocessing method for the questions.
             inproc (str): Inprocessing method for the questions.
             postproc (str): Postprocessing method for the questions.
@@ -36,7 +34,8 @@ class Evaluation:
             raise ValueError("Number of questions to evaluate must be at least 1.")
         self.num_questions = nq
         self.perturbation_levels = perturbs  # Format checked in get_cl_args()
-        self.metrics = metrics  # Format checked in get_cl_args()
+        self.metrics = ["rouge_sim", "bleu_sim", "chrf_sim", "bert_sim", "s_bert_sim", "nli_sim", "rouge_cor",
+                        "bleu_cor", "chrf_cor", "bert_cor", "s_bert_cor", "nli_cor", "q_len", "ans_len"]
         self.preprocessing = preproc  # Format checked in get_cl_args()
         self.inprocessing = inproc  # Format checked in get_cl_args()
         self.postprocessing = postproc  # Format checked in get_cl_args()
