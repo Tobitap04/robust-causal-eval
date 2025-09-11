@@ -95,8 +95,8 @@ Use `evaluation_script.py` to evaluate the robustness of a large language model 
 - **Temperature:** The model temperature defaults to 0. Change with `--temp`.
 - **Processing steps:** By default, no preprocessing, inprocessing, or postprocessing is applied. Enable them with `--preproc`, `--inproc`, and `--postproc`.
   - Preprocessing options: `translate`, `filter`, `correct`
-  - Inprocessing strategies: `cot`, `translate`, `causal_chain`, `few_shot1`, `few_shot3`, `few_shot5`, `few_shot7`, `few_shot_gooaq`
-  - Postprocessing options: `format1`, `format2`, `length`, `voting`
+  - Inprocessing strategies: `cot`, `translate`, `causal_reasoning`, `few_shot1`, `few_shot3`, `few_shot5`, `few_shot7`, `few_shot_gooaq`, `robust`
+  - Postprocessing options: `format1`, `format2`, `length`, `self_consistency`
 
 ### Comprehensive Example
 

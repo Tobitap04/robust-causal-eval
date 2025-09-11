@@ -32,7 +32,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             "If the question is not fully in English, translate it into English while preserving the original wording "
             "as closely as possible."
             "If it is already entirely in English, leave it unchanged. Output only the final text inside "
-            "<result>...</result>."
+            "<result> and </result> tags."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
@@ -41,7 +41,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             "Remove all biased or irrelevant information from the question, including any details that are not "
             "essential to understanding or answering it."
             "Preserve the core meaning and the essential question exactly. Output only the final text inside "
-            "<result>...</result>."
+            "<result> and </result> tags."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
@@ -54,7 +54,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             "Do not change word order, wording, or phrasing except as required to fix spelling, capitalization, "
             "and punctuation."
             "Do not add any new words that were not present in the original text. "
-            "Output only the corrected text inside <result>...</result>."
+            "Output only the corrected text inside <result> and </result> tags."
             f"\n\nQuestion: {question}"
         )
         question = filter_result(llm_service.get_llm_response(prompt))
@@ -65,18 +65,33 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     if inproc == "none":
         pass
     elif inproc == "translate":
-        question = question + ("\nPlace the final answer within <result>...</result>. If the question is not fully in "
+        question = question + ("\nPlace the final answer within <result> and </result> tags. If the question is not fully in "
                                "English, first translate it into English while preserving the original wording as "
-                               "closely as possible, then answer the translated question.")
+                               "closely as possible, then answer the translated question. Any constraints given apply only "
+                               "to the final answer.")
     elif inproc == "cot":
-        question = question + ("\nPlace the final answer within <result>...</result>. Any constraints given apply only "
+        question = question + ("\nPlace the final answer within <result> and </result> tags. Any constraints given apply only "
                                "to the final answer, not to the reasoning steps. Let's think step by step.")
+    elif inproc == "causal_reasoning":
+        question = question + (
+            "\nYou are an expert in causal reasoning. "
+            "Your task is to solve the causal question by breaking it down into logical subproblems and reasoning through each one step by step. "
+            "Follow these steps:\n"
+            "1. Decompose the main question into distinct subproblems, identifying possible causes, mechanisms, and potential effects.\n"
+            "2. For each subproblem, provide a concise, evidence-based reasoning path, clearly explaining the logic behind your conclusions.\n"
+            "3. Once all subproblems are analyzed, extract the statements or mechanisms that are most consistently supported across your reasoning.\n"
+            "4. Based on these consistent insights, generate a final, consolidated, factual answer and enclose it within <result> and </result> tags.\n"
+            "(Any constraints provided apply only to the final answer, not to the intermediate reasoning.)"
+        )
     elif bool(re.fullmatch(r'few_shot[0-9]', inproc)):
         question = question + few_shot(int(inproc[-1]))
     elif inproc == "few_shot_gooaq":
         question = question + few_shot_qooaq()
-    elif inproc == "causal_chain":
-        pass  # TODO
+    elif inproc == "robust":
+        question = question + (
+            "\nYou are an expert in robust causal question answering. Provide a clear, consistent, and coherent answer "
+            "that remains robust to variations in the wording or phrasing of the question."
+        )
     else:
         raise ValueError(f"Invalid inprocessing type specified: {inproc}.")
 
@@ -84,19 +99,31 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     if postproc == "none":
         pass
     elif postproc == "length":
-        question = f"\nConstraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
+        question = f"Constraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
     elif postproc == "format1":
-        question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
+        question = (f"Constraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
                     f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
                     f"effects for explanation)."
                     f"No additional text.\nQuestion: {question}")
     elif postproc == "format2":
-        question = (f"\nConstraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
+        question = (f"Constraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
                     f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
                     f"effects for explanation)."
                     f"Do not list any cause or effect more than once and add no additional text.\nQuestion: {question}")
-    elif postproc == "voting":
-        pass  # TODO
+    elif postproc == "self_consistency":
+        print("Generating multiple answers for self-consistency..." + question)
+        all_answers = [
+            filter_result(llm_service.get_llm_response(question, 1)) # Use temperature 1 for diversity
+            for _ in range(3)
+        ]
+        question = (
+            "Below are several answers generated independently. "
+            "Identify the statements or ideas that recur most frequently across them. "
+            "Using only those recurring statements, write a final, consolidated answer "
+            "that is clear, coherent, and consistent.\n\n"
+        )
+        answers_text = "\n\n".join([f"Answer {i + 1}:\n{ans}" for i, ans in enumerate(all_answers)])
+        question += answers_text + "\n\nPlease provide the final consolidated answer in <result> and </result> tags."
     else:
         raise ValueError(f"Invalid postprocessing type specified: {postproc}.")
 
