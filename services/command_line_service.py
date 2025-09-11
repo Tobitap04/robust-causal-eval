@@ -185,11 +185,11 @@ def get_cl_args_eval() -> argparse.Namespace:
 
     parser.add_argument("--inproc", type=str, default="none",
                         choices=["none", "cot", "few_shot_gooaq", "few_shot1", "few_shot3", "few_shot5", "few_shot7",
-                                 "translate", "causal_reasoning", "robust"],
+                                 "translate", "subproblems", "robust"],
                         help="Inprocessing of the question (default: 'none')")
 
     parser.add_argument("--postproc", type=str, default="none",
-                        choices=["none", "format1", "format2", "length", "self_consistency"],
+                        choices=["none", "list1", "list2", "length", "self_consistency"],
                         help="Postprocessing of the question (default: 'none')")
 
     parser.add_argument("--temp", type=float, default=0,

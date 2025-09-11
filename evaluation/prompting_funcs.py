@@ -30,7 +30,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     elif preproc == "translate":
         prompt = (
             "If the question is not fully in English, translate it into English while preserving the original wording "
-            "as closely as possible."
+            "as closely as possible. "
             "If it is already entirely in English, leave it unchanged. Output only the final text inside "
             "<result> and </result> tags."
             f"\n\nQuestion: {question}"
@@ -39,7 +39,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     elif preproc == "filter":
         prompt = (
             "Remove all biased or irrelevant information from the question, including any details that are not "
-            "essential to understanding or answering it."
+            "essential to understanding or answering it. "
             "Preserve the core meaning and the essential question exactly. Output only the final text inside "
             "<result> and </result> tags."
             f"\n\nQuestion: {question}"
@@ -48,11 +48,11 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     elif preproc == "correct":
         prompt = (
             "Correct all spelling mistakes in the text, including letter swaps, missing letters, extra letters, "
-            "or incorrect capitalization."
+            "or incorrect capitalization. "
             "If a word is unclear, infer the most likely intended word based on context. "
             "Also standardize capitalization and ensure punctuation is meaningful and contextually appropriate. "
             "Do not change word order, wording, or phrasing except as required to fix spelling, capitalization, "
-            "and punctuation."
+            "and punctuation. "
             "Do not add any new words that were not present in the original text. "
             "Output only the corrected text inside <result> and </result> tags."
             f"\n\nQuestion: {question}"
@@ -65,14 +65,13 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
     if inproc == "none":
         pass
     elif inproc == "translate":
-        question = question + ("\nPlace the final answer within <result> and </result> tags. If the question is not fully in "
-                               "English, first translate it into English while preserving the original wording as "
+        question = question + ("\nIf the question is not fully in English, first translate it into English while preserving the original wording as "
                                "closely as possible, then answer the translated question. Any constraints given apply only "
-                               "to the final answer.")
+                               "to the final answer. Place the final answer within <result> and </result> tags.")
     elif inproc == "cot":
-        question = question + ("\nPlace the final answer within <result> and </result> tags. Any constraints given apply only "
-                               "to the final answer, not to the reasoning steps. Let's think step by step.")
-    elif inproc == "causal_reasoning":
+        question = question + ("\nLet's think step by step. Any constraints given apply only to the final answer, not to the reasoning steps. "
+                               "Place the final answer within <result> and </result> tags.")
+    elif inproc == "subproblems":
         question = question + (
             "\nYou are an expert in causal reasoning. "
             "Your task is to solve the causal question by breaking it down into logical subproblems and reasoning through each one step by step. "
@@ -80,8 +79,9 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             "1. Decompose the main question into distinct subproblems, identifying possible causes, mechanisms, and potential effects.\n"
             "2. For each subproblem, provide a concise, evidence-based reasoning path, clearly explaining the logic behind your conclusions.\n"
             "3. Once all subproblems are analyzed, extract the statements or mechanisms that are most consistently supported across your reasoning.\n"
-            "4. Based on these consistent insights, generate a final, consolidated, factual answer and enclose it within <result> and </result> tags.\n"
-            "(Any constraints provided apply only to the final answer, not to the intermediate reasoning.)"
+            "4. Based on these consistent insights, generate a final, consolidated, factual answer and enclose it "
+            "within <result> and </result> tags. Any constraints provided apply only to the final answer, not to the "
+            "intermediate reasoning."
         )
     elif bool(re.fullmatch(r'few_shot[0-9]', inproc)):
         question = question + few_shot(int(inproc[-1]))
@@ -100,14 +100,14 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
         pass
     elif postproc == "length":
         question = f"Constraint: Answer the question using {dataset_answer_lengths[dataset]} words.\nQuestion: {question}"
-    elif postproc == "format1":
+    elif postproc == "list1":
         question = (f"Constraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
-                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
+                    f"For binary questions, output only ‘yes’ or ‘no’ (followed by a list of causes or "
                     f"effects for explanation)."
                     f"No additional text.\nQuestion: {question}")
-    elif postproc == "format2":
+    elif postproc == "list2":
         question = (f"Constraint: Output only a comma-separated list of causes or effects in the format A, B, C, … "
-                    f"For binary questions, output only ‘yes’ or ‘no’ (optionally followed by a list of causes or "
+                    f"For binary questions, output only ‘yes’ or ‘no’ (followed by a list of causes or "
                     f"effects for explanation)."
                     f"Do not list any cause or effect more than once and add no additional text.\nQuestion: {question}")
     elif postproc == "self_consistency":
@@ -220,3 +220,12 @@ def filter_result(result: str) -> str:
         return result.split("<result>")[1].split("</result>")[0].strip()
     else:
         return result.strip()
+prompt = (
+            "Below are several answers generated independently. "
+            "Identify the statements or ideas that recur most frequently across them. "
+            "Using only those recurring statements, write a final, consolidated answer "
+            "that is clear, coherent, and consistent.\n\n"
+        )
+
+
+print(prompt)
