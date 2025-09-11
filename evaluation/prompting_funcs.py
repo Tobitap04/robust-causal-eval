@@ -111,7 +111,6 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
                     f"effects for explanation)."
                     f"Do not list any cause or effect more than once and add no additional text.\nQuestion: {question}")
     elif postproc == "self_consistency":
-        print("Generating multiple answers for self-consistency..." + question)
         all_answers = [
             filter_result(llm_service.get_llm_response(question, 1)) # Use temperature 1 for diversity
             for _ in range(3)
