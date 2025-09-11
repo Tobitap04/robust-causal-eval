@@ -220,12 +220,3 @@ def filter_result(result: str) -> str:
         return result.split("<result>")[1].split("</result>")[0].strip()
     else:
         return result.strip()
-prompt = (
-            "Below are several answers generated independently. "
-            "Identify the statements or ideas that recur most frequently across them. "
-            "Using only those recurring statements, write a final, consolidated answer "
-            "that is clear, coherent, and consistent.\n\n"
-        )
-
-
-print(prompt)
