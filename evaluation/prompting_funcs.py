@@ -116,7 +116,7 @@ def processing_func(question: str, preproc: str, inproc: str, postproc: str, dat
             for _ in range(3)
         ]
         question = (
-            "Below are several answers generated independently. "
+            "Below are three answers generated independently. "
             "Identify the statements or ideas that recur most frequently across them. "
             "Using only those recurring statements, write a final, consolidated answer "
             "that is clear, coherent, and consistent.\n\n"
